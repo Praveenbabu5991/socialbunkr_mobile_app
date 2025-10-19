@@ -1,54 +1,28 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
-import 'pages/about_page.dart';
-import 'pages/contact_page.dart';
-import 'pages/login_page.dart';
-import 'pages/register_page.dart';
+import 'package:flutter_application_1/routes/app_router.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "My Flutter App",
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: MainTabs(), // use TabBar as main screen
-    );
-  }
-}
-
-class MainTabs extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 5, // 5 tabs
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("My Flutter App"),
-          bottom: TabBar(
-            isScrollable: true, // allows scrolling if tabs are many
-            tabs: [
-              Tab(text: "Home", icon: Icon(Icons.home)),
-              Tab(text: "About", icon: Icon(Icons.info)),
-              Tab(text: "Contact", icon: Icon(Icons.contact_mail)),
-              Tab(text: "Login", icon: Icon(Icons.login)),
-              Tab(text: "Register", icon: Icon(Icons.person_add)),
-            ],
-          ),
+      title: "Social Bunkr",
+      theme: ThemeData(
+        primaryColor: const Color(0xFF0B3D2E),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0B3D2E),
+          secondary: const Color(0xFFF5B400),
         ),
-        body: TabBarView(
-          children: [
-            HomePage(),    // Stateful
-            AboutPage(),   // Stateless
-            ContactPage(), // Stateful
-            LoginPage(),   // Stateful
-            RegisterPage() // Stateful
-          ],
-        ),
+        fontFamily: 'Poppins',
+        scaffoldBackgroundColor: Colors.white,
       ),
+      initialRoute: AppRouter.landing,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }

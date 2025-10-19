@@ -242,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to Register Page
+                        Navigator.pushNamed(context, '/register');
                       },
                       child: const Text(
                         "Sign up here",

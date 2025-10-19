@@ -255,7 +255,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to Login Page
+                        Navigator.pushNamed(context, '/login');
                       },
                       child: const Text(
                         "Log in",
