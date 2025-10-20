@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../logic/blocs/verify_property/verify_property_bloc.dart';
+import '../../logic/blocs/my_properties/my_properties_bloc.dart'; // Added
 import '../../data/repositories/property_repository.dart';
 
 class VerifyPropertyPage extends StatelessWidget {
@@ -72,6 +73,8 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
                 backgroundColor: Colors.green,
               ),
             );
+            // Dispatch FetchMyProperties to refresh the list
+            BlocProvider.of<MyPropertiesBloc>(context).add(FetchMyProperties());
             Navigator.of(context).pop();
           }
         },
