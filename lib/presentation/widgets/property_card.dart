@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../logic/blocs/authentication/authentication_bloc.dart';
+import '../../routes/app_router.dart'; // Added
 
 class PropertyCard extends StatelessWidget {
   final dynamic property;
@@ -21,7 +22,7 @@ class PropertyCard extends StatelessWidget {
         onTap: () {
           final authState = BlocProvider.of<AuthenticationBloc>(context).state;
           if (authState is AuthenticationAuthenticated && authState.isVerified) {
-            Navigator.pushNamed(context, '/property-detail', arguments: property['id']);
+            Navigator.pushNamed(context, AppRouter.hostDashboard); // Changed to HostDashboard
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(

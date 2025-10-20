@@ -5,6 +5,7 @@ import '../../logic/blocs/my_properties/my_properties_bloc.dart';
 import '../../data/repositories/property_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../tabs/my_properties_tab.dart';
+import '../../routes/app_router.dart'; // Added
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

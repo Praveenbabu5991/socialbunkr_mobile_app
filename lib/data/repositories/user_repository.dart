@@ -13,6 +13,8 @@ class UserRepository {
       await _secureStorage.write(key: 'organization_id', value: userData['organization_id']);
     }
     await _secureStorage.write(key: 'organization_is_verified', value: userData['organization_is_verified'].toString());
+    await _secureStorage.write(key: 'first_name', value: userData['first_name']); // Added
+    await _secureStorage.write(key: 'last_name', value: userData['last_name']);   // Added
     return userData;
   }
 
@@ -20,6 +22,8 @@ class UserRepository {
     await _secureStorage.delete(key: 'token');
     await _secureStorage.delete(key: 'organization_id');
     await _secureStorage.delete(key: 'organization_is_verified');
+    await _secureStorage.delete(key: 'first_name'); // Added
+    await _secureStorage.delete(key: 'last_name');  // Added
   }
 
   Future<void> persistToken(String token) async {
@@ -38,6 +42,14 @@ class UserRepository {
   Future<bool> isOrganizationVerified() async {
     final String? isVerified = await _secureStorage.read(key: 'organization_is_verified');
     return isVerified == 'true';
+  }
+
+  Future<String?> getFirstName() async {
+    return await _secureStorage.read(key: 'first_name');
+  }
+
+  Future<String?> getLastName() async {
+    return await _secureStorage.read(key: 'last_name');
   }
 
   Future<Map<String, dynamic>> signup(String email, String password, String firstName, String lastName, String role) {

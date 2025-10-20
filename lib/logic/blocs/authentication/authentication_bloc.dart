@@ -14,7 +14,9 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
       final bool hasToken = await userRepository.hasToken();
       if (hasToken) {
         final bool isVerified = await userRepository.isOrganizationVerified();
-        emit(AuthenticationAuthenticated(isVerified: isVerified));
+        final String? firstName = await userRepository.getFirstName(); // Get first name
+        final String? lastName = await userRepository.getLastName();   // Get last name
+        emit(AuthenticationAuthenticated(isVerified: isVerified, firstName: firstName ?? '', lastName: lastName ?? ''));
       } else {
         emit(AuthenticationUnauthenticated());
       }
@@ -23,7 +25,9 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
     on<LoggedIn>((event, emit) async {
       await userRepository.persistToken(event.token);
       final bool isVerified = await userRepository.isOrganizationVerified();
-      emit(AuthenticationAuthenticated(isVerified: isVerified));
+      final String? firstName = await userRepository.getFirstName(); // Get first name
+      final String? lastName = await userRepository.getLastName();   // Get last name
+      emit(AuthenticationAuthenticated(isVerified: isVerified, firstName: firstName ?? '', lastName: lastName ?? ''));
     });
 
     on<LoggedOut>((event, emit) async {

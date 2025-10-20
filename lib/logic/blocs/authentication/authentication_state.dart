@@ -12,11 +12,13 @@ class AuthenticationInitial extends AuthenticationState {}
 
 class AuthenticationAuthenticated extends AuthenticationState {
   final bool isVerified;
+  final String firstName; // Added
+  final String lastName;  // Added
 
-  const AuthenticationAuthenticated({required this.isVerified});
+  const AuthenticationAuthenticated({required this.isVerified, required this.firstName, required this.lastName}); // Modified constructor
 
   @override
-  List<Object> get props => [isVerified];
+  List<Object> get props => [isVerified, firstName, lastName]; // Modified props
 }
 
 class AuthenticationUnauthenticated extends AuthenticationState {}
