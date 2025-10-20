@@ -1,14 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../logic/blocs/authentication/authentication_bloc.dart';
+import '../../logic/blocs/my_properties/my_properties_bloc.dart';
+import '../../data/repositories/property_repository.dart';
+import '../../data/repositories/user_repository.dart';
+import '../tabs/my_properties_tab.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => MyPropertiesBloc(propertyRepository: PropertyRepository(), userRepository: UserRepository())..add(FetchMyProperties()),
+      child: const HomeView(),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage> {
-  String selectedProperty = "Property 1";
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  int _selectedIndex = 0;
+
+  static const List<Widget> _widgetOptions = <Widget>[
+    HomeTab(),
+    MyPropertiesTab(),
+    ProfileTab(), // Assuming you have a ProfileTab widget
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'SB Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business),
+            label: 'My Property',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  String? selectedProperty;
   String selectedFilter = "Upcoming";
 
   @override
@@ -57,10 +125,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.notifications, color: primaryColor),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: primaryColor),
+            onPressed: () {
+              BlocProvider.of<AuthenticationBloc>(context).add(LoggedOut());
+            },
           ),
         ],
       ),
@@ -83,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   onPressed: () {
-                    // TODO: Add navigation to Add Property page
+                    Navigator.pushNamed(context, '/add-property');
                   },
                   child: Text(
                     "+ Add New Property",
@@ -100,31 +170,46 @@ class _HomePageState extends State<HomePage> {
               SizedBox(height: isTablet ? 28 : 20),
 
               // ✅ Section 2: Property Dropdown
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: isTablet ? 4 : 0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: primaryColor),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: selectedProperty,
-                    items: const [
-                      DropdownMenuItem(value: "Property 1", child: Text("Property 1")),
-                      DropdownMenuItem(value: "Property 2", child: Text("Property 2")),
-                    ],
-                    onChanged: (value) {
-                      setState(() => selectedProperty = value!);
-                    },
-                    isExpanded: true,
-                    icon: const Icon(Icons.arrow_drop_down, color: primaryColor),
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: isTablet ? 18 : 16,
-                      fontFamily: fontFamily,
-                    ),
-                  ),
-                ),
+              BlocBuilder<MyPropertiesBloc, MyPropertiesState>(
+                builder: (context, state) {
+                  if (state is MyPropertiesLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is MyPropertiesLoaded) {
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: isTablet ? 4 : 0),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: primaryColor),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedProperty ?? (state.properties.isNotEmpty ? state.properties.first['id'] : null),
+                          items: state.properties.map<DropdownMenuItem<String>>((property) {
+                            return DropdownMenuItem<String>(
+                              value: property['id'],
+                              child: Text(property['name']),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() => selectedProperty = value!);
+                          },
+                          isExpanded: true,
+                          icon: const Icon(Icons.arrow_drop_down, color: primaryColor),
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: isTablet ? 18 : 16,
+                            fontFamily: fontFamily,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  if (state is MyPropertiesError) {
+                    return Text(state.error);
+                  }
+                  return Container();
+                },
               ),
 
               SizedBox(height: isTablet ? 28 : 24),
@@ -245,22 +330,17 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+    );
+  }
+}
 
-      // ✅ FOOTER NAVIGATION BAR
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: Colors.grey,
-        elevation: 10,
-        selectedFontSize: isTablet ? 14 : 12,
-        unselectedFontSize: isTablet ? 12 : 10,
-        iconSize: isTablet ? 28 : 22,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "SB Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.business), label: "My Property"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
+class ProfileTab extends StatelessWidget {
+  const ProfileTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('Profile Tab'),
     );
   }
 }

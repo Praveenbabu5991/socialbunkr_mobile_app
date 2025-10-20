@@ -23,6 +23,17 @@ class LandingPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Icon
+                Text(
+                  'ஃ',
+                  style: TextStyle(
+                    fontSize: isTablet ? 80 : 60,
+                    color: primaryColor,
+                  ),
+                ),
+
+                SizedBox(height: isTablet ? 16 : 8),
+
                 // Header Logo
                 RichText(
                   textAlign: TextAlign.center,

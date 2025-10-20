@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../data/repositories/user_repository.dart';
+import '../../logic/blocs/login/login_bloc.dart';
+import '../../logic/blocs/authentication/authentication_bloc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,238 +30,264 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(isTablet ? 32.0 : 16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: isTablet ? 48 : 32),
+      body: BlocProvider(
+        create: (context) => LoginBloc(userRepository: UserRepository(), authenticationBloc: BlocProvider.of<AuthenticationBloc>(context)),
+        child: BlocListener<LoginBloc, LoginState>(
+          listener: (context, state) {
+            if (state is LoginFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Login Failed: ${state.error}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+            if (state is LoginSuccess) {
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          },
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isTablet ? 32.0 : 16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: isTablet ? 48 : 32),
 
-                // 🏷️ Header Logo
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    text: "Social ",
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: isTablet ? 28 : 24,
-                      fontFamily: fontFamily,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: "Bunkr",
+                    // 🏷️ Header Logo
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        text: "Social ",
                         style: TextStyle(
                           color: primaryColor,
                           fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
-                          decorationColor: accentColor,
-                          decorationThickness: 3,
+                          fontSize: isTablet ? 28 : 24,
+                          fontFamily: fontFamily,
                         ),
+                        children: [
+                          TextSpan(
+                            text: "Bunkr",
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                              decorationColor: accentColor,
+                              decorationThickness: 3,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: isTablet ? 40 : 24),
-
-                // 🟡 Title
-                Text(
-                  "Welcome Back!",
-                  style: TextStyle(
-                    color: accentColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isTablet ? 26 : 22,
-                    fontFamily: fontFamily,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "Login to continue your journey with Social Bunkr.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: isTablet ? 18 : 14,
-                    fontFamily: fontFamily,
-                  ),
-                ),
-
-                SizedBox(height: isTablet ? 40 : 24),
-
-                // 📧 Email Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: emailController,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.email, color: primaryColor),
-                      hintText: "Email Address",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
 
-                SizedBox(height: 12),
+                    SizedBox(height: isTablet ? 40 : 24),
 
-                // 🔒 Password Field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
+                    // 🟡 Title
+                    Text(
+                      "Welcome Back!",
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: isTablet ? 26 : 22,
+                        fontFamily: fontFamily,
                       ),
-                    ],
-                  ),
-                  child: TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.lock, color: primaryColor),
-                      hintText: "Password",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Login to continue your journey with Social Bunkr.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: isTablet ? 18 : 14,
+                        fontFamily: fontFamily,
+                      ),
+                    ),
 
-                SizedBox(height: 12),
+                    SizedBox(height: isTablet ? 40 : 24),
 
-                // 🧩 Options Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    // 📧 Email Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.email, color: primaryColor),
+                          hintText: "Email Address",
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+
+                    SizedBox(height: 12),
+
+                    // 🔒 Password Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.lock, color: primaryColor),
+                          hintText: "Password",
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+
+                    SizedBox(height: 12),
+
+                    // 🧩 Options Row
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Checkbox(
-                          value: rememberMe,
-                          onChanged: (value) {
-                            setState(() => rememberMe = value!);
-                          },
-                          activeColor: primaryColor,
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: rememberMe,
+                              onChanged: (value) {
+                                setState(() => rememberMe = value!);
+                              },
+                              activeColor: primaryColor,
+                            ),
+                            const Text(
+                              "Remember me",
+                              style: TextStyle(color: Colors.black87, fontFamily: fontFamily),
+                            ),
+                          ],
                         ),
-                        const Text(
-                          "Remember me",
-                          style: TextStyle(color: Colors.black87, fontFamily: fontFamily),
+                        TextButton(
+                          onPressed: () {
+                            // TODO: Implement forgot password logic
+                          },
+                          child: const Text(
+                            "Forgot password?",
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: fontFamily,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Implement forgot password logic
-                      },
-                      child: const Text(
-                        "Forgot password?",
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: fontFamily,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
 
-                SizedBox(height: 16),
+                    SizedBox(height: 16),
 
-                // 🔘 Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                    ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        // TODO: Connect to backend login API
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Logging in...")),
+                    // 🔘 Login Button
+                    BlocBuilder<LoginBloc, LoginState>(
+                      builder: (context, state) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: state is LoginLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 3,
+                                  ),
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      BlocProvider.of<LoginBloc>(context).add(
+                                        LoginButtonPressed(
+                                          email: emailController.text,
+                                          password: passwordController.text,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    "Login",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isTablet ? 18 : 16,
+                                      fontFamily: fontFamily,
+                                    ),
+                                  ),
+                                ),
                         );
-                      }
-                    },
-                    child: Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: isTablet ? 18 : 16,
-                        fontFamily: fontFamily,
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: isTablet ? 32 : 20),
-
-                // 🧍 Footer
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don’t have an account? ",
-                      style: TextStyle(
-                        color: Colors.grey[700],
-                        fontFamily: fontFamily,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/register');
                       },
-                      child: const Text(
-                        "Sign up here",
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: fontFamily,
-                        ),
-                      ),
                     ),
+
+                    SizedBox(height: isTablet ? 32 : 20),
+
+                    // 🧍 Footer
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don’t have an account? ",
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontFamily: fontFamily,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/register');
+                          },
+                          child: const Text(
+                            "Sign up here",
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: fontFamily,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: isTablet ? 32 : 24),
                   ],
                 ),
-
-                SizedBox(height: isTablet ? 32 : 24),
-              ],
+              ),
             ),
           ),
         ),

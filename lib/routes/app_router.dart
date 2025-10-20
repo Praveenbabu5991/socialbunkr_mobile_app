@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/presentation/pages/add_property_page.dart';
 import 'package:flutter_application_1/presentation/pages/home_page.dart';
 import 'package:flutter_application_1/presentation/pages/landing_page.dart';
 import 'package:flutter_application_1/presentation/pages/login_page.dart';
 import 'package:flutter_application_1/presentation/pages/register_page.dart';
+import 'package:flutter_application_1/presentation/pages/verify_property_page.dart';
+import 'package:flutter_application_1/presentation/pages/property_detail_page.dart';
 
 class AppRouter {
   static const String landing = '/';
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
+  static const String addProperty = '/add-property';
+  static const String verifyProperty = '/verify-property';
+  static const String propertyDetail = '/property-detail';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -20,6 +26,14 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const RegisterPage());
       case home:
         return MaterialPageRoute(builder: (_) => const HomePage());
+      case addProperty:
+        return MaterialPageRoute(builder: (_) => const AddPropertyPage());
+      case verifyProperty:
+        final propertyId = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => VerifyPropertyPage(propertyId: propertyId));
+      case propertyDetail:
+        final propertyId = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => PropertyDetailPage(propertyId: propertyId));
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
