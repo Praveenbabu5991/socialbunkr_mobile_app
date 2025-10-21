@@ -29,4 +29,22 @@ class UserApiProvider {
       throw Exception('Failed to signup');
     }
   }
+
+  Future<Map<String, dynamic>> fetchUserProfile() async {
+    final response = await _httpClient.get('/api/users/my-profile/');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch user profile');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchOrganizationDetails(String organizationId) async {
+    final response = await _httpClient.get('/api/users/organizations/$organizationId/');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch organization details');
+    }
+  }
 }

@@ -1,5 +1,5 @@
 
-part of 'my_properties_bloc.dart';
+import 'package:equatable/equatable.dart';
 
 abstract class MyPropertiesEvent extends Equatable {
   const MyPropertiesEvent();

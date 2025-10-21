@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../logic/blocs/add_property/add_property_bloc.dart';
 import '../../data/repositories/property_repository.dart';
+import '../../logic/blocs/my_properties/my_properties_bloc.dart'; // Added
+import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
 
 class AddPropertyPage extends StatelessWidget {
   const AddPropertyPage({super.key});
@@ -74,6 +76,8 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
               ),
             );
             Navigator.of(context).pop();
+            // After successfully adding a property, refresh the properties list on the home page
+            BlocProvider.of<MyPropertiesBloc>(context).add(FetchMyProperties());
           }
         },
         child: SingleChildScrollView(

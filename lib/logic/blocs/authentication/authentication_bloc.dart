@@ -13,10 +13,15 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
     on<AppStarted>((event, emit) async {
       final bool hasToken = await userRepository.hasToken();
       if (hasToken) {
+        final String? organizationId = await userRepository.getOrganizationId();
+        if (organizationId != null) {
+          await userRepository.fetchAndPersistOrganizationVerificationStatus(organizationId);
+        }
         final bool isVerified = await userRepository.isOrganizationVerified();
         final String? firstName = await userRepository.getFirstName(); // Get first name
         final String? lastName = await userRepository.getLastName();   // Get last name
-        emit(AuthenticationAuthenticated(isVerified: isVerified, firstName: firstName ?? '', lastName: lastName ?? ''));
+        final String? userId = await userRepository.getUserId();       // Get user ID
+        emit(AuthenticationAuthenticated(isVerified: isVerified, firstName: firstName ?? '', lastName: lastName ?? '', userId: userId ?? ''));
       } else {
         emit(AuthenticationUnauthenticated());
       }
@@ -27,7 +32,8 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
       final bool isVerified = await userRepository.isOrganizationVerified();
       final String? firstName = await userRepository.getFirstName(); // Get first name
       final String? lastName = await userRepository.getLastName();   // Get last name
-      emit(AuthenticationAuthenticated(isVerified: isVerified, firstName: firstName ?? '', lastName: lastName ?? ''));
+      final String? userId = await userRepository.getUserId();       // Get user ID
+      emit(AuthenticationAuthenticated(isVerified: isVerified, firstName: firstName ?? '', lastName: lastName ?? '', userId: userId ?? ''));
     });
 
     on<LoggedOut>((event, emit) async {

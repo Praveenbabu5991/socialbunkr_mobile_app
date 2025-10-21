@@ -2,35 +2,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../logic/blocs/verify_property/verify_property_bloc.dart';
-import '../../logic/blocs/my_properties/my_properties_bloc.dart'; // Added
-import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
-import '../../data/repositories/property_repository.dart';
+import 'package:flutter_application_1/logic/blocs/host_verification/host_verification_bloc.dart';
+import 'package:flutter_application_1/data/providers/host_verification_api_provider.dart';
+import 'package:flutter_application_1/logic/blocs/authentication/authentication_bloc.dart';
+import 'package:flutter_application_1/routes/app_router.dart';
 
-class VerifyPropertyPage extends StatelessWidget {
-  final String propertyId;
-
-  const VerifyPropertyPage({super.key, required this.propertyId});
+class HostVerificationPage extends StatelessWidget {
+  const HostVerificationPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => VerifyPropertyBloc(propertyRepository: PropertyRepository()),
-      child: VerifyPropertyForm(propertyId: propertyId),
+      create: (context) => HostVerificationBloc(hostVerificationApiProvider: HostVerificationApiProvider()),
+      child: const HostVerificationForm(),
     );
   }
 }
 
-class VerifyPropertyForm extends StatefulWidget {
-  final String propertyId;
-
-  const VerifyPropertyForm({super.key, required this.propertyId});
+class HostVerificationForm extends StatefulWidget {
+  const HostVerificationForm({super.key});
 
   @override
-  State<VerifyPropertyForm> createState() => _VerifyPropertyFormState();
+  State<HostVerificationForm> createState() => _HostVerificationFormState();
 }
 
-class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
+class _HostVerificationFormState extends State<HostVerificationForm> {
   final _formKey = GlobalKey<FormState>();
 
   String _documentType = 'govt_id';
@@ -52,31 +48,31 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Property', style: TextStyle(fontFamily: fontFamily, color: primaryColor)),
+        title: const Text('Host Verification', style: TextStyle(fontFamily: fontFamily, color: primaryColor)),
         backgroundColor: Colors.white,
         elevation: 2,
         iconTheme: const IconThemeData(color: primaryColor),
       ),
-      body: BlocListener<VerifyPropertyBloc, VerifyPropertyState>(
+      body: BlocListener<HostVerificationBloc, HostVerificationState>(
         listener: (context, state) {
-          if (state is VerifyPropertyFailure) {
+          if (state is HostVerificationFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to verify property: ${state.error}'),
+                content: Text('Failed to submit host verification: ${state.error}'),
                 backgroundColor: Colors.red,
               ),
             );
           }
-          if (state is VerifyPropertySuccess) {
+          if (state is HostVerificationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Property verification submitted successfully!'),
+                content: Text('Host verification submitted successfully!'),
                 backgroundColor: Colors.green,
               ),
             );
-            // Dispatch FetchMyProperties to refresh the list
-            BlocProvider.of<MyPropertiesBloc>(context).add(FetchMyProperties());
-            Navigator.of(context).pop();
+            // After successful submission, refresh authentication status
+            BlocProvider.of<AuthenticationBloc>(context).add(AppStarted());
+            Navigator.of(context).pushNamedAndRemoveUntil(AppRouter.home, (route) => false);
           }
         },
         child: SingleChildScrollView(
@@ -89,15 +85,15 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
                 _buildDropdown(
                   value: _documentType,
                   onChanged: (value) => setState(() => _documentType = value!),
-                  items: ['govt_id', 'utility_bill', 'property_deed', 'other'],
+                  items: ['govt_id', 'utility_bill', 'other'],
                   labelText: 'Document Type',
                 ),
                 const SizedBox(height: 16),
                 _buildDocumentPicker(),
                 const SizedBox(height: 24),
-                BlocBuilder<VerifyPropertyBloc, VerifyPropertyState>(
+                BlocBuilder<HostVerificationBloc, HostVerificationState>(
                   builder: (context, state) {
-                    return state is VerifyPropertyLoading
+                    return state is HostVerificationLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -107,7 +103,7 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
                               ),
                               elevation: 3,
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState!.validate()) {
                                 if (_document == null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -115,11 +111,22 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
                                   );
                                   return;
                                 }
-                                BlocProvider.of<VerifyPropertyBloc>(context).add(
-                                  VerifyPropertyButtonPressed(
-                                    propertyId: widget.propertyId,
+                                final authState = BlocProvider.of<AuthenticationBloc>(context).state;
+                                String? userId;
+                                if (authState is AuthenticationAuthenticated) {
+                                  userId = authState.userId;
+                                }
+                                if (userId == null || userId.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('User ID not found. Please log in again.')),
+                                  );
+                                  return;
+                                }
+                                BlocProvider.of<HostVerificationBloc>(context).add(
+                                  HostVerificationSubmitted(
                                     documentType: _documentType,
                                     document: _document!,
+                                    userId: userId,
                                   ),
                                 );
                               }

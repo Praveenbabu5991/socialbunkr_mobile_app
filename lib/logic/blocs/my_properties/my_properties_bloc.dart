@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../data/repositories/property_repository.dart';
 import '../../../data/repositories/user_repository.dart';
+import 'my_properties_event.dart'; // Added
 
-part 'my_properties_event.dart';
 part 'my_properties_state.dart';
 
 class MyPropertiesBloc extends Bloc<MyPropertiesEvent, MyPropertiesState> {

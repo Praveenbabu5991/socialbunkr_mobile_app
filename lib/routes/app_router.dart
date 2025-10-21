@@ -7,6 +7,7 @@ import 'package:flutter_application_1/presentation/pages/register_page.dart';
 import 'package:flutter_application_1/presentation/pages/verify_property_page.dart';
 import 'package:flutter_application_1/presentation/pages/property_detail_page.dart';
 import 'package:flutter_application_1/presentation/pages/host_dashboard_page.dart'; // Added
+import 'package:flutter_application_1/presentation/pages/host_verification_page.dart'; // Added
 
 class AppRouter {
   static const String landing = '/';
@@ -17,6 +18,7 @@ class AppRouter {
   static const String verifyProperty = '/verify-property';
   static const String propertyDetail = '/property-detail';
   static const String hostDashboard = '/host-dashboard'; // Added
+  static const String hostVerification = '/host-verification'; // Added
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -38,6 +40,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => PropertyDetailPage(propertyId: propertyId));
       case hostDashboard: // Added
         return MaterialPageRoute(builder: (_) => const HostDashboardPage()); // Added
+      case hostVerification: // Added
+        return MaterialPageRoute(builder: (_) => const HostVerificationPage()); // Added
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

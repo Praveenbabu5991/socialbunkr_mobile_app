@@ -258,7 +258,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                           password: passwordController.text,
                                           firstName: firstNameController.text,
                                           lastName: lastNameController.text,
-                                          role: 'guest', // or get it from a form field
+                                          role: 'host',
                                         ),
                                       );
                                     }

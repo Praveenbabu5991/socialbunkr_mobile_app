@@ -5,7 +5,9 @@ import '../../logic/blocs/my_properties/my_properties_bloc.dart';
 import '../../data/repositories/property_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../tabs/my_properties_tab.dart';
-import '../../routes/app_router.dart'; // Added
+import '../../routes/app_router.dart';
+import 'package:flutter_application_1/presentation/widgets/custom_button.dart'; // Added for "Verify Account" button
+import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -142,30 +144,97 @@ class _HomeTabState extends State<HomeTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ✅ Section 1: Add Property Button
-              SizedBox(
-                width: double.infinity,
-                height: isTablet ? 60 : 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accentColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/add-property');
-                  },
-                  child: Text(
-                    "+ Add New Property",
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: isTablet ? 18 : 16,
-                      fontFamily: fontFamily,
-                    ),
-                  ),
-                ),
+              BlocBuilder<AuthenticationBloc, AuthenticationState>(
+                builder: (context, state) {
+                  bool isVerified = false;
+                  if (state is AuthenticationAuthenticated) {
+                    isVerified = state.isVerified;
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, // Added to align children
+                    children: [
+                      if (!isVerified)
+                        Card(
+                          margin: const EdgeInsets.only(bottom: 16.0),
+                          color: primaryColor.withOpacity(0.1),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Verify Your Account',
+                                  style: TextStyle(
+                                    fontFamily: fontFamily,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'To list properties and manage bookings, please verify your account.',
+                                  style: TextStyle(fontFamily: fontFamily, fontSize: 14, color: primaryColor.withOpacity(0.8)),
+                                ),
+                                const SizedBox(height: 16),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(context, AppRouter.hostVerification);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: accentColor,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    ),
+                                    child: Text(
+                                      'Verify Now',
+                                      style: TextStyle(fontFamily: fontFamily, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      SizedBox(height: isTablet ? 28 : 20), // Spacing after verify button/card
+                      // Add New Property Button (conditionally enabled)
+                      SizedBox(
+                        width: double.infinity,
+                        height: isTablet ? 60 : 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: accentColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: isVerified // Only enable if verified
+                              ? () {
+                                  Navigator.pushNamed(context, '/add-property');
+                                }
+                              : () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please verify your account to add a new property.')),
+                                  );
+                                },
+                          child: Text(
+                            "+ Add New Property",
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isTablet ? 18 : 16,
+                              fontFamily: fontFamily,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               SizedBox(height: isTablet ? 28 : 20),
