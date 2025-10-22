@@ -104,7 +104,6 @@ class Bed {
     required this.description,
     required this.pricePerBed,
     required this.property,
-    this.roomId, // Make it optional for creation
   });
 
   factory Bed.fromJson(Map<String, dynamic> json) {
@@ -115,7 +114,6 @@ class Bed {
       description: json['description'] ?? '',
       pricePerBed: double.tryParse(json['price_per_bed'].toString()) ?? 0.0,
       property: json['property'].toString(),
-      roomId: json['room'], // Assuming the backend sends room ID as 'room'
     );
   }
 
@@ -127,7 +125,6 @@ class Bed {
       'description': description,
       'price_per_bed': pricePerBed,
       'property': property,
-      'room': roomId, // Send room ID to backend
     };
   }
 }
@@ -238,7 +235,6 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
       await _apiService.deleteRoom(id);
       setState(() {
         _rooms.removeWhere((room) => room.id == id);
-        _beds.removeWhere((bed) => bed.roomId == id); // Correctly remove associated beds
       });
     } catch (e) {
       _showErrorSnackBar('Failed to delete room: $e');
@@ -774,7 +770,6 @@ class _CreateBedFormState extends State<_CreateBedForm> {
   late TextEditingController _descriptionController;
   late TextEditingController _pricePerBedController; // Changed name
   String? _selectedGender;
-  String? _selectedRoomId; // Changed to String?
 
   @override
   void initState() {
@@ -783,8 +778,6 @@ class _CreateBedFormState extends State<_CreateBedForm> {
     _descriptionController = TextEditingController(text: widget.bed?.description);
     _pricePerBedController = TextEditingController(text: widget.bed?.pricePerBed.toString());
     _selectedGender = widget.bed?.coRoommateGender;
-    // Find the room ID based on the bed's property (which is the room ID from backend)
-    _selectedRoomId = widget.bed?.roomId;
   }
 
   @override
@@ -876,28 +869,7 @@ class _CreateBedFormState extends State<_CreateBedForm> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>( // Changed to String
-              value: _selectedRoomId,
-              decoration: _inputDecoration('Attach to Room'),
-              items: widget.rooms.map((Room room) {
-                return DropdownMenuItem<String>(
-                  value: room.id,
-                  child: Text('Room ${room.roomNumber}'),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedRoomId = newValue;
-                });
-              },
-              validator: (value) {
-                if (value == null) {
-                  return 'Please select a room';
-                }
-                return null;
-              },
-            ),
+            
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -930,7 +902,6 @@ class _CreateBedFormState extends State<_CreateBedForm> {
                         description: _descriptionController.text,
                         pricePerBed: double.parse(_pricePerBedController.text),
                         property: widget.propertyId, // Host's property ID
-                        roomId: _selectedRoomId!, // Room ID
                       );
                       widget.onSave(newBed);
                     }
