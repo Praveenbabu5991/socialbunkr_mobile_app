@@ -167,16 +167,23 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
         .cast<RoomAvailability>()
         .toList();
 
-        _bedAvailabilities = fetchedBedAvailabilities
-            .map((json) {
-              if (json['start_date'] == null || json['end_date'] == null) {
-                return null;
-              }
-              return BedAvailability.fromJson(json);
-            })
-            .where((availability) => availability != null && availability.bedId.isNotEmpty)
-            .cast<BedAvailability>()
-            .toList();
+        _bedAvailabilities = fetchedBedAvailabilities.map((json) {
+          final bedNumber = json['bed_name']?.toString();
+          final bed = _beds.firstWhereOrNull((b) => b.bedNumber == bedNumber);
+          if (bed == null) {
+            return null;
+          }
+          return BedAvailability(
+            id: json['id']?.toString(),
+            bedId: bed.id!,
+            bedNumber: bedNumber ?? 'N/A',
+            startDate: json['start_date'] != null ? DateTime.parse(json['start_date']) : DateTime.now(),
+            endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : DateTime.now(),
+          );
+        })
+        .where((availability) => availability != null)
+        .cast<BedAvailability>()
+        .toList();
       });
     } catch (e) {
       setState(() {
