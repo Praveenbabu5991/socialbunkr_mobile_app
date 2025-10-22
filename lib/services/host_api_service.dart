@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -153,6 +152,78 @@ class HostApiService {
 
     if (response.statusCode != 204) {
       throw Exception('Failed to delete room: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // --- Availability API Calls ---
+
+  Future<List<dynamic>> getViewRoomDuration(String propertyId) async {
+    if (_apiBaseUrl == null) {
+      throw Exception('API_BASE_URL is not defined in .env');
+    }
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('$_apiBaseUrl/api/hosts/roomavailability/by-property/$propertyId/'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load room durations: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateRoomDuration(String roomId, Map<String, dynamic> roomAvailabilityData) async {
+    if (_apiBaseUrl == null) {
+      throw Exception('API_BASE_URL is not defined in .env');
+    }
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('$_apiBaseUrl/api/hosts/roomavailability/$roomId/'),
+      headers: headers,
+      body: json.encode(roomAvailabilityData),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to update room duration: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<List<dynamic>> getViewBedDuration(String propertyId) async {
+    if (_apiBaseUrl == null) {
+      throw Exception('API_BASE_URL is not defined in .env');
+    }
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('$_apiBaseUrl/api/hosts/bedavailability/by-property/$propertyId/'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load bed durations: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateBedDuration(String bedId, Map<String, dynamic> bedAvailabilityData) async {
+    if (_apiBaseUrl == null) {
+      throw Exception('API_BASE_URL is not defined in .env');
+    }
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('$_apiBaseUrl/api/hosts/bedavailability/$bedId/'),
+      headers: headers,
+      body: json.encode(bedAvailabilityData),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to update bed duration: ${response.statusCode} ${response.body}');
     }
   }
 }

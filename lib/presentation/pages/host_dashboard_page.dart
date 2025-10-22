@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:socialbunkr_mobile_app/screens/list_your_room_bed_screen.dart'; // Import the new screen
+import 'package:socialbunkr_mobile_app/screens/availability_management_screen.dart'; // Import the new screen
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -549,6 +550,12 @@ class ListVacantBedsContent extends StatelessWidget {
         PropertyActionCard(
           icon: Icons.calendar_today_outlined,
           title: "Update Bed/Room Availability",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AvailabilityManagementScreen(propertyId: propertyId)),
+            );
+          },
         ),
         PropertyActionCard(
           icon: Icons.edit_location_alt_outlined,
