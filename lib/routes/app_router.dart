@@ -39,7 +39,8 @@ class AppRouter {
         final propertyId = settings.arguments as String;
         return MaterialPageRoute(builder: (_) => PropertyDetailPage(propertyId: propertyId));
       case hostDashboard: // Added
-        return MaterialPageRoute(builder: (_) => const HostDashboardPage()); // Added
+        final propertyId = settings.arguments as String;
+        return MaterialPageRoute(builder: (_) => HostDashboardPage(propertyId: propertyId));
       case hostVerification: // Added
         return MaterialPageRoute(builder: (_) => const HostVerificationPage()); // Added
       default:

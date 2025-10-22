@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../logic/blocs/my_properties/my_properties_bloc.dart';
 import '../widgets/property_card.dart';
+import '../../routes/app_router.dart';
 
 class MyPropertiesTab extends StatelessWidget {
   const MyPropertiesTab({super.key});
@@ -20,7 +21,16 @@ class MyPropertiesTab extends StatelessWidget {
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: PropertyCard(property: state.properties[index]),
+                child: PropertyCard(
+                  property: state.properties[index],
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRouter.hostDashboard,
+                      arguments: state.properties[index]['id'],
+                    );
+                  },
+                ),
               );
             },
           );

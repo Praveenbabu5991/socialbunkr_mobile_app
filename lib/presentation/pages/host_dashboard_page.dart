@@ -1,408 +1,618 @@
+
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_application_1/logic/blocs/authentication/authentication_bloc.dart';
-import 'package:flutter_application_1/routes/app_router.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class HostDashboardPage extends StatefulWidget {
-  const HostDashboardPage({super.key});
+// 🎨 BRAND COLORS & STYLES
+const Color primaryDarkGreen = Color(0xFF0B3D2E);
+const Color accentGold = Color(0xFFE9B949);
+const Color backgroundWhite = Color(0xFFFFFFFF);
+const Color neutralGreenGray = Color(0xFF4C6158);
+const Color lightGrayBackground = Color(0xFFF8FAF8);
+const Color inactiveTabGray = Color(0xFFEAEDEB);
+const Color cardBorderGray = Color(0xFFE8ECE9);
+const Color dividerGray = Color(0xFFE0E0E0);
+const Color textBlack = Color(0xFF1F1F1F);
+const Color textGray = Color(0xFF6C757D);
+const BoxShadow cardShadow = BoxShadow(
+  color: Color.fromRGBO(0, 0, 0, 0.08),
+  blurRadius: 12,
+  offset: Offset(0, 4),
+);
+const BoxShadow softShadow = BoxShadow(
+  color: Color(0x0D000000),
+  blurRadius: 10,
+  offset: Offset(0, 2),
+);
 
-  @override
-  State<HostDashboardPage> createState() => _HostDashboardPageState();
+// --- FONT STYLES ---
+const String fontName = 'Poppins';
+
+// Booking Model
+class Booking {
+  final String id;
+  final String guestName;
+  final String checkIn;
+  final String checkOut;
+  final String totalPrice;
+  final String status; // e.g., Upcoming, Ongoing, Completed, Cancelled
+
+  Booking({
+    required this.id,
+    required this.guestName,
+    required this.checkIn,
+    required this.checkOut,
+    required this.totalPrice,
+    required this.status,
+  });
+
+  factory Booking.fromJson(Map<String, dynamic> json) {
+    return Booking(
+      id: json['id'].toString(),
+      guestName: json['guest_name'] ?? 'N/A',
+      checkIn: json['checkin'] ?? 'N/A',
+      checkOut: json['checkout'] ?? 'N/A',
+      totalPrice: '₹${double.tryParse(json['total_price']?.toString() ?? '')?.toStringAsFixed(0) ?? '0'}',
+      status: json['status'] ?? 'N/A',
+    );
+  }
 }
 
-class _HostDashboardPageState extends State<HostDashboardPage> with TickerProviderStateMixin {
-  late TabController _mainTabController;
-  late TabController _subTabController;
-
-  final Color primaryColor = const Color(0xFF0B3D2E);
-  final Color accentColor = const Color(0xFFF5B400);
-  final String fontFamily = 'Poppins';
-
-  @override
-  void initState() {
-    super.initState();
-    _mainTabController = TabController(length: 2, vsync: this);
-    _subTabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _mainTabController.dispose();
-    _subTabController.dispose();
-    super.dispose();
-  }
+class HostDashboardPage extends StatelessWidget {
+  final String propertyId;
+  const HostDashboardPage({super.key, required this.propertyId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Center(
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(
-                fontFamily: fontFamily,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-              children: [
-                const TextSpan(text: 'Social '),
-                TextSpan(
-                  text: 'Bunkr',
-                  style: TextStyle(
-                    decoration: TextDecoration.underline,
-                    decorationColor: accentColor,
-                    decorationThickness: 3,
-                  ),
-                ),
-              ],
-            ),
+      backgroundColor: lightGrayBackground,
+      appBar: const HeaderWidget(),
+      body: HostDashboardBody(propertyId: propertyId),
+    );
+  }
+}
+
+// 1️⃣ HEADER SECTION
+class HeaderWidget extends StatelessWidget implements PreferredSizeWidget {
+  const HeaderWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      backgroundColor: backgroundWhite,
+      elevation: 0,
+      centerTitle: true,
+      title: RichText(
+        textAlign: TextAlign.center,
+        text: const TextSpan(
+          style: TextStyle(
+            fontFamily: fontName,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: primaryDarkGreen,
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              backgroundColor: primaryColor.withOpacity(0.1),
-              child: Text(
-                BlocProvider.of<AuthenticationBloc>(context).state is AuthenticationAuthenticated
-                    ? (BlocProvider.of<AuthenticationBloc>(context).state as AuthenticationAuthenticated).firstName.isNotEmpty
-                        ? (BlocProvider.of<AuthenticationBloc>(context).state as AuthenticationAuthenticated).firstName[0].toUpperCase()
-                        : '?'
-                    : '?',
-                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
           children: [
-            // Main Tabs
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TabBar(
-                  controller: _mainTabController,
-                  indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: primaryColor,
-                  ),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: primaryColor,
-                  tabs: [
-                    Tab(
-                      child: Text(
-                        'List & Earn Extra',
-                        style: TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Tab(
-                      child: Text(
-                        'Tenant Management',
-                        style: TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _mainTabController,
-                children: [
-                  // Content for "List & Earn Extra"
-                  Column(
-                    children: [
-                      // Sub Tabs
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                        child: Container(
-                          height: 35,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: primaryColor),
-                          ),
-                          child: TabBar(
-                            controller: _subTabController,
-                            indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: primaryColor,
-                            ),
-                            labelColor: Colors.white,
-                            unselectedLabelColor: primaryColor,
-                            isScrollable: true,
-                            tabs: [
-                              Tab(
-                                child: Text(
-                                  'Booking',
-                                  style: TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Tab(
-                                child: Text(
-                                  'List Vacant Beds',
-                                  style: TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _subTabController,
-                          children: [
-                            // Booking Tab Content
-                            _buildBookingTabContent(),
-                            // My Property Tab Content
-                            _buildMyPropertyTabContent(),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Content for "Tenant Management" (Placeholder)
-                  Center(
-                    child: Text(
-                      'Tenant Management Content',
-                      style: TextStyle(fontFamily: fontFamily, fontSize: 20, color: primaryColor),
-                    ),
-                  ),
-                ],
+            TextSpan(text: 'Social'),
+            TextSpan(
+              text: 'Bunkr',
+              style: TextStyle(
+                decoration: TextDecoration.underline,
+                decorationColor: accentGold,
+                decorationThickness: 2.0,
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Handle add new listing/quick action
-          Navigator.pushNamed(context, AppRouter.addProperty);
-        },
-        backgroundColor: primaryColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, // Assuming 'My Property' is the default active tab
-        onTap: (index) {
-          // Handle navigation
-          if (index == 0) {
-            // Navigate to SB Home
-            Navigator.pushReplacementNamed(context, AppRouter.home);
-          } else if (index == 1) {
-            // Stay on My Property (Host Dashboard)
-          } else if (index == 2) {
-            // Navigate to Profile
-            // Navigator.pushReplacementNamed(context, AppRoutes.profile); // Assuming a profile route
-          }
-        },
-        selectedItemColor: primaryColor,
-        unselectedItemColor: primaryColor.withOpacity(0.6),
-        showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(fontFamily: fontFamily, fontWeight: FontWeight.bold),
-        unselectedLabelStyle: TextStyle(fontFamily: fontFamily),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'SB Home',
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: accentGold,
+            child: Icon(
+              Icons.person_outline,
+              color: primaryDarkGreen,
+              size: 22,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.apartment),
-            label: 'My Property',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildBookingTabContent() {
-    // Sample Booking Data
-    final List<Map<String, dynamic>> bookings = [
-      {
-        'guestName': 'John Doe',
-        'checkIn': '2025-11-01',
-        'checkOut': '2025-11-05',
-        'totalPrice': '₹5000',
-      },
-      {
-        'guestName': 'Jane Smith',
-        'checkIn': '2025-11-10',
-        'checkOut': '2025-11-12',
-        'totalPrice': '₹2500',
-      },
-      {
-        'guestName': 'Alice Johnson',
-        'checkIn': '2025-11-15',
-        'checkOut': '2025-11-20',
-        'totalPrice': '₹7000',
-      },
-    ];
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        final booking = bookings[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10.0),
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+class HostDashboardBody extends StatefulWidget {
+  final String propertyId;
+  const HostDashboardBody({super.key, required this.propertyId});
+
+  @override
+  _HostDashboardBodyState createState() => _HostDashboardBodyState();
+}
+
+class _HostDashboardBodyState extends State<HostDashboardBody> {
+  int _mainTabIndex = 0;
+  int _subTabIndex = 0;
+  List<Booking> _upcomingBookings = [];
+  List<Booking> _ongoingBookings = [];
+  bool _isLoadingBookings = true;
+  String _errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookings();
+  }
+
+  Future<void> _fetchBookings() async {
+    setState(() {
+      _isLoadingBookings = true;
+      _errorMessage = '';
+    });
+
+    try {
+      // Replace with actual propertyID from user context or selection
+      // For now, using a placeholder. You'll need to get this dynamically.
+      final String? apiBaseUrl = dotenv.env['API_BASE_URL'];
+      final String propertyID = widget.propertyId;
+      final _secureStorage = FlutterSecureStorage();
+      final token = await _secureStorage.read(key: 'token');
+      print('Auth Token: $token'); // Debug print
+
+      if (apiBaseUrl == null) {
+        throw Exception('API_BASE_URL is not defined in .env');
+      }
+
+      final response = await http.get(
+        Uri.parse('$apiBaseUrl/api/payments/properties/$propertyID/orders/'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Token $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        setState(() {
+          _upcomingBookings = (data['Upcoming'] as List)
+              .map((e) => Booking.fromJson(e))
+              .toList();
+          _ongoingBookings = (data['Ongoing'] as List)
+              .map((e) => Booking.fromJson(e))
+              .toList();
+          // You can also parse Completed and Cancelled if needed
+        });
+      } else {
+        _errorMessage =
+            'Failed to load bookings: ${response.statusCode} ${response.reasonPhrase}';
+      }
+    } catch (e) {
+      _errorMessage = 'Error fetching bookings: $e';
+    } finally {
+      setState(() {
+        _isLoadingBookings = false;
+      });
+    }
+  }
+
+  void _onMainTabSelected(int index) {
+    setState(() {
+      _mainTabIndex = index;
+    });
+  }
+
+  void _onSubTabSelected(int index) {
+    setState(() {
+      _subTabIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        MainTabToggle(
+          selectedIndex: _mainTabIndex,
+          onTabSelected: _onMainTabSelected,
+        ),
+        const SizedBox(height: 20),
+        // Conditionally show SubTabToggle and its content
+        if (_mainTabIndex == 0)
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  booking['guestName'],
-                  style: TextStyle(
-                    fontFamily: fontFamily,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: primaryColor,
-                  ),
+                SubTabToggle(
+                  selectedIndex: _subTabIndex,
+                  onTabSelected: _onSubTabSelected,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Check-in: ${booking['checkIn']}',
-                  style: TextStyle(fontFamily: fontFamily, fontSize: 14),
-                ),
-                Text(
-                  'Check-out: ${booking['checkOut']}',
-                  style: TextStyle(fontFamily: fontFamily, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Total: ${booking['totalPrice']}',
-                        style: TextStyle(
-                          fontFamily: fontFamily,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: accentColor,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Handle CHECK-IN action
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        child: Text(
-                          'CHECK-IN',
-                          style: TextStyle(fontFamily: fontFamily, color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 16),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _isLoadingBookings
+                        ? const Center(child: CircularProgressIndicator())
+                        : _errorMessage.isNotEmpty
+                            ? Center(
+                                child: Text(
+                                  _errorMessage,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                              )
+                            : _subTabIndex == 0
+                                ? BookingContent(
+                                    bookings: _upcomingBookings + _ongoingBookings) // Combine for simplicity
+                                : const ListVacantBedsContent(),
                   ),
                 ),
               ],
             ),
+          )
+        else
+          const Expanded(
+            child: Center(
+              child: Text(
+                "Tenant Management Content",
+                style: TextStyle(
+                    fontFamily: fontName,
+                    fontSize: 16,
+                    color: neutralGreenGray),
+              ),
+            ),
           ),
+      ],
+    );
+  }
+}
+
+// 2️⃣ TOP TOGGLE (MAIN TABS)
+class MainTabToggle extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+
+  const MainTabToggle(
+      {super.key, required this.selectedIndex, required this.onTabSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: inactiveTabGray,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          _buildTab(context, "List & Earn Extra", 0),
+          _buildTab(context, "Tenant Management", 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTab(BuildContext context, String text, int index) {
+    final bool isActive = selectedIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTabSelected(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? primaryDarkGreen : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: fontName,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: isActive ? Colors.white : primaryDarkGreen,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// 3️⃣ SUB TABS (UNDER MAIN TAB)
+class SubTabToggle extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+
+  const SubTabToggle(
+      {super.key, required this.selectedIndex, required this.onTabSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildSubTab(context, "Booking", 0),
+          const SizedBox(width: 8),
+          _buildSubTab(context, "List Vacant Beds", 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubTab(BuildContext context, String text, int index) {
+    final bool isActive = selectedIndex == index;
+    return GestureDetector(
+      onTap: () => onTabSelected(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: isActive ? primaryDarkGreen : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: primaryDarkGreen,
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontFamily: fontName,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: isActive ? Colors.white : primaryDarkGreen,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// 4️⃣ BOOKING TAB CONTENT
+class BookingContent extends StatelessWidget {
+  final List<Booking> bookings;
+
+  const BookingContent({super.key, required this.bookings});
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookings.isEmpty) {
+      return const Center(
+        child: Text(
+          'No bookings found.',
+          style: TextStyle(fontFamily: fontName, fontSize: 16, color: neutralGreenGray),
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: bookings.length,
+      itemBuilder: (context, index) {
+        final booking = bookings[index];
+        return BookingCard(
+          guestName: booking.guestName,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          status: booking.status,
         );
       },
     );
   }
+}
 
-  Widget _buildMyPropertyTabContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
+class BookingCard extends StatelessWidget {
+  final String guestName;
+  final String checkIn;
+  final String checkOut;
+  final String status;
+
+  const BookingCard({
+    super.key,
+    required this.guestName,
+    required this.checkIn,
+    required this.checkOut,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundWhite,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [cardShadow],
+      ),
+      child: Row(
         children: [
-          // Card 1: List Your Room/Bed (Full Width)
-          _buildPropertyManagementTile(
-            icon: Icons.bed,
-            title: 'List Your Room/Bed',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Navigating to List Room/Bed')),
-              );
-              // Navigator.pushNamed(context, AppRouter.addProperty); // Actual navigation
-            },
+          const Icon(Icons.bed_outlined, color: primaryDarkGreen, size: 28),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  guestName,
+                  style: const TextStyle(
+                    fontFamily: fontName,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: primaryDarkGreen,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _buildDateColumn("Check-in", checkIn),
+                    Container(
+                      height: 30,
+                      width: 1,
+                      color: dividerGray,
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    _buildDateColumn("Check-out", checkOut),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          // Cards 2 & 3: Side-by-side
-          Row(
-            children: [
-              Expanded(
-                child: _buildPropertyManagementTile(
-                  icon: Icons.calendar_today,
-                  title: 'Update Bed/Room Availability',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Navigating to Update Availability')),
-                    );
-                    // Handle update availability
-                  },
-                ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: () {
+              // Handle CHECK-IN action based on booking status
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accentGold,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildPropertyManagementTile(
-                  icon: Icons.edit,
-                  title: 'Update Property Details',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Navigating to Update Property Details')),
-                    );
-                    // Handle update property details
-                  },
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            ),
+            child: const Text(
+              "CHECK-IN",
+              style: TextStyle(
+                fontFamily: fontName,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPropertyManagementTile({required IconData icon, required String title, required VoidCallback onTap}) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+  Widget _buildDateColumn(String label, String date) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: fontName,
+            fontSize: 12,
+            color: textGray,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          date,
+          style: const TextStyle(
+            fontFamily: fontName,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: textBlack,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// 5️⃣ LIST VACANT BEDS TAB CONTENT
+class ListVacantBedsContent extends StatelessWidget {
+  const ListVacantBedsContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 1,
+      childAspectRatio: 3.5,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      mainAxisSpacing: 12,
+      children: const [
+        PropertyActionCard(
+          icon: Icons.add_business_outlined,
+          title: "List Your Room/Bed",
+        ),
+        PropertyActionCard(
+          icon: Icons.calendar_today_outlined,
+          title: "Update Bed/Room Availability",
+        ),
+        PropertyActionCard(
+          icon: Icons.edit_location_alt_outlined,
+          title: "Update Property Details",
+        ),
+      ],
+    );
+  }
+}
+
+class PropertyActionCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+
+  const PropertyActionCard({
+    super.key,
+    required this.icon,
+    required this.title,
+  });
+
+  @override
+  _PropertyActionCardState createState() => _PropertyActionCardState();
+}
+
+class _PropertyActionCardState extends State<PropertyActionCard> {
+  double _scale = 1.0;
+
+  void _onTapDown(TapDownDetails details) {
+    setState(() => _scale = 0.97);
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    setState(() => _scale = 1.0);
+  }
+
+  void _onTapCancel() {
+    setState(() => _scale = 1.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedScale(
+        scale: _scale,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: backgroundWhite,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cardBorderGray, width: 1),
+            boxShadow: const [softShadow],
+          ),
           child: Row(
             children: [
-              Icon(icon, color: primaryColor, size: 30),
+              Icon(widget.icon, color: primaryDarkGreen, size: 28),
               const SizedBox(width: 16),
               Text(
-                title,
-                style: TextStyle(
-                  fontFamily: fontFamily,
+                widget.title,
+                style: const TextStyle(
+                  fontFamily: fontName,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: primaryColor,
+                  fontSize: 16,
+                  color: primaryDarkGreen,
                 ),
               ),
               const Spacer(),
-              Icon(Icons.arrow_forward_ios, color: primaryColor.withOpacity(0.6)),
+              const Icon(Icons.arrow_forward_ios,
+                  color: neutralGreenGray, size: 18),
             ],
           ),
         ),

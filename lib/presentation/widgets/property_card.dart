@@ -7,7 +7,9 @@ import '../../routes/app_router.dart'; // Added
 class PropertyCard extends StatelessWidget {
   final dynamic property;
 
-  const PropertyCard({super.key, required this.property});
+  const PropertyCard({super.key, required this.property, this.onTap});
+
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -19,19 +21,7 @@ class PropertyCard extends StatelessWidget {
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () {
-          final authState = BlocProvider.of<AuthenticationBloc>(context).state;
-          if (authState is AuthenticationAuthenticated && authState.isVerified) {
-            Navigator.pushNamed(context, AppRouter.hostDashboard); // Changed to HostDashboard
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('You need to be verified to view property details.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
+        onTap: onTap, // Use the provided onTap callback
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -83,7 +73,7 @@ class PropertyCard extends StatelessWidget {
                         elevation: 3,
                       ),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/verify-property', arguments: property['id']);
+                        Navigator.pushNamed(context, AppRouter.verifyProperty, arguments: property['id']);
                       },
                       child: Text(
                         'Verify',
