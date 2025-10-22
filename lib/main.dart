@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_application_1/routes/app_router.dart';
+import 'package:socialbunkr_mobile_app/routes/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'logic/blocs/authentication/authentication_bloc.dart';
 import 'data/repositories/user_repository.dart';

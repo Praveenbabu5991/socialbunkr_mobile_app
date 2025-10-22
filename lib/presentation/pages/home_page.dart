@@ -6,7 +6,7 @@ import '../../data/repositories/property_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../tabs/my_properties_tab.dart';
 import '../../routes/app_router.dart';
-import 'package:flutter_application_1/presentation/widgets/custom_button.dart'; // Added for "Verify Account" button
+import 'package:socialbunkr_mobile_app/presentation/widgets/custom_button.dart'; // Added for "Verify Account" button
 import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
 
 class HomePage extends StatelessWidget {

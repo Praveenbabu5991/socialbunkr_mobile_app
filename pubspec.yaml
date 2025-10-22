@@ -1,4 +1,4 @@
-name: flutter_application_1
+name: socialbunkr_mobile_app
 description: "A new Flutter project."
 publish_to: "none"
 version: 0.1.0
@@ -17,6 +17,7 @@ dependencies:
   flutter_dotenv: ^5.0.2
   flutter_secure_storage: ^9.0.0
   image_picker: ^1.0.4
+  google_fonts: ^6.2.1 # Added for Poppins font
 
 dev_dependencies:
   flutter_test:

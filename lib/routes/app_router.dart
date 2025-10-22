@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/presentation/pages/add_property_page.dart';
-import 'package:flutter_application_1/presentation/pages/home_page.dart';
-import 'package:flutter_application_1/presentation/pages/landing_page.dart';
-import 'package:flutter_application_1/presentation/pages/login_page.dart';
-import 'package:flutter_application_1/presentation/pages/register_page.dart';
-import 'package:flutter_application_1/presentation/pages/verify_property_page.dart';
-import 'package:flutter_application_1/presentation/pages/property_detail_page.dart';
-import 'package:flutter_application_1/presentation/pages/host_dashboard_page.dart'; // Added
-import 'package:flutter_application_1/presentation/pages/host_verification_page.dart'; // Added
+import 'package:socialbunkr_mobile_app/presentation/pages/add_property_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/home_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/landing_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/login_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/register_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/verify_property_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/property_detail_page.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/host_dashboard_page.dart'; // Added
+import 'package:socialbunkr_mobile_app/presentation/pages/host_verification_page.dart'; // Added
 
 class AppRouter {
   static const String landing = '/';

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:socialbunkr_mobile_app/screens/list_your_room_bed_screen.dart'; // Import the new screen
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -247,7 +248,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
                             : _subTabIndex == 0
                                 ? BookingContent(
                                     bookings: _upcomingBookings + _ongoingBookings) // Combine for simplicity
-                                : const ListVacantBedsContent(),
+                                : ListVacantBedsContent(),
                   ),
                 ),
               ],
@@ -524,7 +525,7 @@ class BookingCard extends StatelessWidget {
 
 // 5️⃣ LIST VACANT BEDS TAB CONTENT
 class ListVacantBedsContent extends StatelessWidget {
-  const ListVacantBedsContent({super.key});
+  ListVacantBedsContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -533,10 +534,16 @@ class ListVacantBedsContent extends StatelessWidget {
       childAspectRatio: 3.5,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       mainAxisSpacing: 12,
-      children: const [
+      children: [
         PropertyActionCard(
           icon: Icons.add_business_outlined,
           title: "List Your Room/Bed",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ListYourRoomBedScreen()),
+            );
+          },
         ),
         PropertyActionCard(
           icon: Icons.calendar_today_outlined,
@@ -554,11 +561,13 @@ class ListVacantBedsContent extends StatelessWidget {
 class PropertyActionCard extends StatefulWidget {
   final IconData icon;
   final String title;
+  final VoidCallback? onTap; // Added onTap callback
 
   const PropertyActionCard({
     super.key,
     required this.icon,
     required this.title,
+    this.onTap, // Added onTap to constructor
   });
 
   @override
@@ -568,24 +577,16 @@ class PropertyActionCard extends StatefulWidget {
 class _PropertyActionCardState extends State<PropertyActionCard> {
   double _scale = 1.0;
 
-  void _onTapDown(TapDownDetails details) {
-    setState(() => _scale = 0.97);
-  }
-
-  void _onTapUp(TapUpDetails details) {
-    setState(() => _scale = 1.0);
-  }
-
-  void _onTapCancel() {
-    setState(() => _scale = 1.0);
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
+      onTap: () {
+        setState(() => _scale = 0.97); // Animate on tap
+        Future.delayed(const Duration(milliseconds: 150), () {
+          setState(() => _scale = 1.0); // Reset scale after animation
+          widget.onTap?.call(); // Trigger the actual navigation
+        });
+      },
       child: AnimatedScale(
         scale: _scale,
         duration: const Duration(milliseconds: 150),

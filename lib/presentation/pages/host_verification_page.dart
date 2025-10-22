@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_application_1/logic/blocs/host_verification/host_verification_bloc.dart';
-import 'package:flutter_application_1/data/providers/host_verification_api_provider.dart';
-import 'package:flutter_application_1/logic/blocs/authentication/authentication_bloc.dart';
-import 'package:flutter_application_1/routes/app_router.dart';
+import 'package:socialbunkr_mobile_app/logic/blocs/host_verification/host_verification_bloc.dart';
+import 'package:socialbunkr_mobile_app/data/providers/host_verification_api_provider.dart';
+import 'package:socialbunkr_mobile_app/logic/blocs/authentication/authentication_bloc.dart';
+import 'package:socialbunkr_mobile_app/routes/app_router.dart';
 
 class HostVerificationPage extends StatelessWidget {
   const HostVerificationPage({super.key});
