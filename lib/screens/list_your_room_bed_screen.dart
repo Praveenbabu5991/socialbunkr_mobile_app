@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:socialbunkr_mobile_app/services/host_api_service.dart'; // Import the new service
 
 // --- Constants ---
 class AppColors {
@@ -9,7 +9,7 @@ class AppColors {
   static const Color accentGrayGreen = Color(0xFF4C6158);
   static const Color lightGray = Color(0xFFE0E0E0);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color lightNeutralGreen = Color(0xFFF2F7F5); // Added new color
+  static const Color lightNeutralGreen = Color(0xFFF2F7F5);
 }
 
 class AppTextStyles {
@@ -49,142 +49,220 @@ class AppTextStyles {
 
 // --- Models ---
 class Room {
-  String id;
+  String? id; // Changed to String? to match backend
   String roomNumber;
   String description;
   int capacity;
-  double price;
+  double pricePerRoom;
+  String property; // This is the host's property ID
 
   Room({
-    required this.id,
+    this.id,
     required this.roomNumber,
     required this.description,
     required this.capacity,
-    required this.price,
+    required this.pricePerRoom,
+    required this.property,
   });
+
+  factory Room.fromJson(Map<String, dynamic> json) {
+    return Room(
+      id: json['id'],
+      roomNumber: json['room_number'],
+      description: json['description'] ?? '',
+      capacity: int.tryParse(json['capacity'].toString()) ?? 0,
+      pricePerRoom: double.tryParse(json['price_per_room'].toString()) ?? 0.0,
+      property: json['property'].toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'room_number': roomNumber,
+      'description': description,
+      'capacity': capacity,
+      'price_per_room': pricePerRoom,
+      'property': property,
+    };
+  }
 }
 
 class Bed {
-  String id;
-  String bedName;
-  String gender;
+  String? id; // Changed to String? to match backend
+  String bedNumber;
+  String coRoommateGender;
   String description;
-  double price;
-  String roomId; // To link to a room
+  double pricePerBed;
+  String property; // This is the host's property ID
+  String? roomId; // Changed to String? to link to a specific room
 
   Bed({
-    required this.id,
-    required this.bedName,
-    required this.gender,
+    this.id,
+    required this.bedNumber,
+    required this.coRoommateGender,
     required this.description,
-    required this.price,
-    required this.roomId,
+    required this.pricePerBed,
+    required this.property,
+    this.roomId, // Make it optional for creation
   });
+
+  factory Bed.fromJson(Map<String, dynamic> json) {
+    return Bed(
+      id: json['id'],
+      bedNumber: json['bed_number'],
+      coRoommateGender: json['co_roommate_gender'],
+      description: json['description'] ?? '',
+      pricePerBed: double.tryParse(json['price_per_bed'].toString()) ?? 0.0,
+      property: json['property'].toString(),
+      roomId: json['room'], // Assuming the backend sends room ID as 'room'
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'bed_number': bedNumber,
+      'co_roommate_gender': coRoommateGender,
+      'description': description,
+      'price_per_bed': pricePerBed,
+      'property': property,
+      'room': roomId, // Send room ID to backend
+    };
+  }
 }
 
 class ListYourRoomBedScreen extends StatefulWidget {
-  const ListYourRoomBedScreen({super.key});
+  final String propertyId; // Added propertyId
+  const ListYourRoomBedScreen({super.key, required this.propertyId});
 
   @override
   State<ListYourRoomBedScreen> createState() => _ListYourRoomBedScreenState();
 }
 
 class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
+  final HostApiService _apiService = HostApiService();
   List<Room> _rooms = [];
   List<Bed> _beds = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadMockData();
+    _fetchRoomsAndBeds();
   }
 
-  void _loadMockData() {
-    _rooms = [
-      Room(
-        id: 'room1',
-        roomNumber: '101-A',
-        capacity: 3,
-        price: 500,
-        description: 'Cozy 2-sharing room near city center.',
-      ),
-      Room(
-        id: 'room2',
-        roomNumber: '102-B',
-        capacity: 2,
-        price: 700,
-        description: 'Spacious room with private balcony.',
-      ),
-    ];
-    _beds = [
-      Bed(
-        id: 'bed1',
-        bedName: 'Bed 101-A-1',
-        gender: 'Male',
-        price: 600,
-        description: 'Comfortable private bed with storage.',
-        roomId: 'room1',
-      ),
-      Bed(
-        id: 'bed2',
-        bedName: 'Bed 101-A-2',
-        gender: 'Female',
-        price: 550,
-        description: 'Standard bed with shared amenities.',
-        roomId: 'room1',
-      ),
-      Bed(
-        id: 'bed3',
-        bedName: 'Bed 102-B-1',
-        gender: 'Male',
-        price: 750,
-        description: 'Premium bed with city view.',
-        roomId: 'room2',
-      ),
-    ];
-  }
-
-  void _addRoom(Room room) {
+  Future<void> _fetchRoomsAndBeds() async {
     setState(() {
-      _rooms.add(room);
+      _isLoading = true;
+      _errorMessage = null;
     });
+    try {
+      final fetchedRooms = await _apiService.getViewRoom(widget.propertyId);
+      final fetchedBeds = await _apiService.getViewBed(widget.propertyId);
+
+      setState(() {
+        _rooms = fetchedRooms.map((json) => Room.fromJson(json)).toList();
+        _beds = fetchedBeds.map((json) => Bed.fromJson(json)).toList();
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load data: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void _addBed(Bed bed) {
-    setState(() {
-      _beds.add(bed);
-    });
+  Future<void> _addRoom(Room room) async {
+    try {
+      final newRoomJson = await _apiService.createRoom(room.toJson());
+      setState(() {
+        _rooms.add(Room.fromJson(newRoomJson));
+      });
+    } catch (e) {
+      _showErrorSnackBar('Failed to create room: $e');
+    }
   }
 
-  void _editRoom(Room updatedRoom) {
-    setState(() {
-      final index = _rooms.indexWhere((room) => room.id == updatedRoom.id);
-      if (index != -1) {
-        _rooms[index] = updatedRoom;
+  Future<void> _addBed(Bed bed) async {
+    try {
+      final newBedJson = await _apiService.createBed(bed.toJson());
+      setState(() {
+        _beds.add(Bed.fromJson(newBedJson));
+      });
+    } catch (e) {
+      _showErrorSnackBar('Failed to create bed: $e');
+    }
+  }
+
+  Future<void> _editRoom(Room updatedRoom) async {
+    try {
+      if (updatedRoom.id == null) {
+        throw Exception('Room ID is null for update operation.');
       }
-    });
+      final updatedRoomJson = await _apiService.updateRoom(updatedRoom.id!, updatedRoom.toJson());
+      setState(() {
+        final index = _rooms.indexWhere((room) => room.id == updatedRoom.id);
+        if (index != -1) {
+          _rooms[index] = Room.fromJson(updatedRoomJson);
+        }
+      });
+    } catch (e) {
+      _showErrorSnackBar('Failed to update room: $e');
+    }
   }
 
-  void _editBed(Bed updatedBed) {
-    setState(() {
-      final index = _beds.indexWhere((bed) => bed.id == updatedBed.id);
-      if (index != -1) {
-        _beds[index] = updatedBed;
+  Future<void> _editBed(Bed updatedBed) async {
+    try {
+      if (updatedBed.id == null) {
+        throw Exception('Bed ID is null for update operation.');
       }
-    });
+      final updatedBedJson = await _apiService.updateBed(updatedBed.id!, updatedBed.toJson());
+      setState(() {
+        final index = _beds.indexWhere((bed) => bed.id == updatedBed.id);
+        if (index != -1) {
+          _beds[index] = Bed.fromJson(updatedBedJson);
+        }
+      });
+    } catch (e) {
+      _showErrorSnackBar('Failed to update bed: $e');
+    }
   }
 
-  void _deleteRoom(String id) {
-    setState(() {
-      _rooms.removeWhere((room) => room.id == id);
-      _beds.removeWhere((bed) => bed.roomId == id); // Delete associated beds
-    });
+  Future<void> _deleteRoom(String id) async {
+    try {
+      await _apiService.deleteRoom(id);
+      setState(() {
+        _rooms.removeWhere((room) => room.id == id);
+        _beds.removeWhere((bed) => bed.roomId == id); // Correctly remove associated beds
+      });
+    } catch (e) {
+      _showErrorSnackBar('Failed to delete room: $e');
+    }
   }
 
-  void _deleteBed(String id) {
-    setState(() {
-      _beds.removeWhere((bed) => bed.id == id);
-    });
+  Future<void> _deleteBed(String id) async {
+    try {
+      await _apiService.deleteBed(id);
+      setState(() {
+        _beds.removeWhere((bed) => bed.id == id);
+      });
+    } catch (e) {
+      _showErrorSnackBar('Failed to delete bed: $e');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -212,21 +290,28 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _rooms.isEmpty && _beds.isEmpty
-                ? _buildEmptyState()
-                : _buildRoomBedList(),
-          ),
-        ],
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(
+                  child: Text(
+                    _errorMessage!,
+                    style: AppTextStyles.poppinsRegular(color: Colors.red),
+                  ),
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      child: _rooms.isEmpty && _beds.isEmpty
+                          ? _buildEmptyState()
+                          : _buildRoomBedList(),
+                    ),
+                  ],
+                ),
       floatingActionButton: _buildFloatingButtons(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  
 
   Widget _buildFloatingButtons() {
     return Padding(
@@ -316,7 +401,7 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
               style: AppTextStyles.poppinsRegular(color: AppColors.primaryGreen),
             ),
             Text(
-              'Price: ₹${room.price.toStringAsFixed(0)}',
+              'Price: ₹${room.pricePerRoom.toStringAsFixed(0)}',
               style: AppTextStyles.poppinsRegular(color: AppColors.primaryGreen),
             ),
             Text(
@@ -333,14 +418,14 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: AppColors.primaryGreen),
-                  onPressed: () => _deleteRoom(room.id),
+                  onPressed: () => _deleteRoom(room.id!),
                 ),
               ],
             ),
           ],
         ),
       ),
-      color: AppColors.lightNeutralGreen, // Card background color
+      color: AppColors.lightNeutralGreen,
     );
   }
 
@@ -357,16 +442,16 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bed: ${bed.bedName}',
+              'Bed: ${bed.bedNumber}',
               style: AppTextStyles.poppinsSemiBold(fontSize: 18),
             ),
             const SizedBox(height: 8),
             Text(
-              'Gender: ${bed.gender}',
+              'Gender: ${bed.coRoommateGender}',
               style: AppTextStyles.poppinsRegular(color: AppColors.primaryGreen),
             ),
             Text(
-              'Price: ₹${bed.price.toStringAsFixed(0)}',
+              'Price: ₹${bed.pricePerBed.toStringAsFixed(0)}',
               style: AppTextStyles.poppinsRegular(color: AppColors.primaryGreen),
             ),
             Text(
@@ -383,14 +468,14 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: AppColors.primaryGreen),
-                  onPressed: () => _deleteBed(bed.id),
+                  onPressed: () => _deleteBed(bed.id!),
                 ),
               ],
             ),
           ],
         ),
       ),
-      color: AppColors.lightNeutralGreen, // Card background color
+      color: AppColors.lightNeutralGreen,
     );
   }
 
@@ -401,7 +486,6 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Placeholder for illustration
             Icon(
               Icons.bed_outlined,
               size: 80,
@@ -436,6 +520,7 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
           ),
           child: _CreateRoomForm(
             room: room,
+            propertyId: widget.propertyId, // Pass propertyId
             onSave: (newRoom) {
               if (room == null) {
                 _addRoom(newRoom);
@@ -465,7 +550,8 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
           ),
           child: _CreateBedForm(
             bed: bed,
-            rooms: _rooms, // Pass available rooms for dropdown
+            rooms: _rooms,
+            propertyId: widget.propertyId, // Pass propertyId
             onSave: (newBed) {
               if (bed == null) {
                 _addBed(newBed);
@@ -485,12 +571,14 @@ class _ListYourRoomBedScreenState extends State<ListYourRoomBedScreen> {
 // --- Create Room Form Widget ---
 class _CreateRoomForm extends StatefulWidget {
   final Room? room;
+  final String propertyId; // Added propertyId
   final Function(Room) onSave;
   final VoidCallback onCancel;
 
   const _CreateRoomForm({
     super.key,
     this.room,
+    required this.propertyId,
     required this.onSave,
     required this.onCancel,
   });
@@ -504,7 +592,7 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
   late TextEditingController _roomNumberController;
   late TextEditingController _descriptionController;
   late TextEditingController _capacityController;
-  late TextEditingController _priceController;
+  late TextEditingController _pricePerRoomController; // Changed name
 
   @override
   void initState() {
@@ -512,7 +600,7 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
     _roomNumberController = TextEditingController(text: widget.room?.roomNumber);
     _descriptionController = TextEditingController(text: widget.room?.description);
     _capacityController = TextEditingController(text: widget.room?.capacity.toString());
-    _priceController = TextEditingController(text: widget.room?.price.toString());
+    _pricePerRoomController = TextEditingController(text: widget.room?.pricePerRoom.toString());
   }
 
   @override
@@ -520,7 +608,7 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
     _roomNumberController.dispose();
     _descriptionController.dispose();
     _capacityController.dispose();
-    _priceController.dispose();
+    _pricePerRoomController.dispose();
     super.dispose();
   }
 
@@ -546,6 +634,9 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a room number';
                 }
+                if (!RegExp(r'^[0-9]{3}$').hasMatch(value)) {
+                  return 'Room number must be a 3-digit number (e.g., 101).';
+                }
                 return null;
               },
             ),
@@ -554,6 +645,12 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
               controller: _descriptionController,
               labelText: 'Description',
               maxLines: 3,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Description is required.';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -564,23 +661,28 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
                 if (value == null || value.isEmpty) {
                   return 'Please enter capacity';
                 }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                final capacity = int.tryParse(value);
+                if (capacity == null || capacity <= 0) {
+                  return 'Capacity must be a positive number.';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
             _buildTextField(
-              controller: _priceController,
-              labelText: 'Price',
+              controller: _pricePerRoomController,
+              labelText: 'Price per Room',
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a price';
                 }
-                if (double.tryParse(value) == null) {
+                final price = double.tryParse(value);
+                if (price == null) {
                   return 'Please enter a valid number';
+                }
+                if (price > 1000) {
+                  return 'Price per room cannot exceed 1000.';
                 }
                 return null;
               },
@@ -611,11 +713,12 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       final newRoom = Room(
-                        id: widget.room?.id ?? DateTime.now().toIso8601String(),
+                        id: widget.room?.id, // Use existing ID for update
                         roomNumber: _roomNumberController.text,
                         description: _descriptionController.text,
                         capacity: int.parse(_capacityController.text),
-                        price: double.parse(_priceController.text),
+                        pricePerRoom: double.parse(_pricePerRoomController.text),
+                        property: widget.propertyId,
                       );
                       widget.onSave(newRoom);
                     }
@@ -648,6 +751,7 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
 class _CreateBedForm extends StatefulWidget {
   final Bed? bed;
   final List<Room> rooms; // Available rooms to attach to
+  final String propertyId; // Added propertyId
   final Function(Bed) onSave;
   final VoidCallback onCancel;
 
@@ -655,6 +759,7 @@ class _CreateBedForm extends StatefulWidget {
     super.key,
     this.bed,
     required this.rooms,
+    required this.propertyId,
     required this.onSave,
     required this.onCancel,
   });
@@ -665,27 +770,28 @@ class _CreateBedForm extends StatefulWidget {
 
 class _CreateBedFormState extends State<_CreateBedForm> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _bedNameController;
+  late TextEditingController _bedNumberController; // Changed name
   late TextEditingController _descriptionController;
-  late TextEditingController _priceController;
+  late TextEditingController _pricePerBedController; // Changed name
   String? _selectedGender;
-  String? _selectedRoomId;
+  String? _selectedRoomId; // Changed to String?
 
   @override
   void initState() {
     super.initState();
-    _bedNameController = TextEditingController(text: widget.bed?.bedName);
+    _bedNumberController = TextEditingController(text: widget.bed?.bedNumber);
     _descriptionController = TextEditingController(text: widget.bed?.description);
-    _priceController = TextEditingController(text: widget.bed?.price.toString());
-    _selectedGender = widget.bed?.gender;
+    _pricePerBedController = TextEditingController(text: widget.bed?.pricePerBed.toString());
+    _selectedGender = widget.bed?.coRoommateGender;
+    // Find the room ID based on the bed's property (which is the room ID from backend)
     _selectedRoomId = widget.bed?.roomId;
   }
 
   @override
   void dispose() {
-    _bedNameController.dispose();
+    _bedNumberController.dispose();
     _descriptionController.dispose();
-    _priceController.dispose();
+    _pricePerBedController.dispose();
     super.dispose();
   }
 
@@ -705,11 +811,14 @@ class _CreateBedFormState extends State<_CreateBedForm> {
             ),
             const SizedBox(height: 20),
             _buildTextField(
-              controller: _bedNameController,
-              labelText: 'Bed Name / ID',
+              controller: _bedNumberController,
+              labelText: 'Bed Number',
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a bed name/ID';
+                  return 'Please enter a bed number';
+                }
+                if (!RegExp(r'^[0-9]{3}-[A-Z]$').hasMatch(value)) {
+                  return 'Bed number must be in the format room no-bed no (e.g., 101-A).';
                 }
                 return null;
               },
@@ -717,11 +826,11 @@ class _CreateBedFormState extends State<_CreateBedForm> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedGender,
-              decoration: _inputDecoration('Gender'),
-              items: ['Male', 'Female', 'Unisex'].map((String gender) {
+              decoration: _inputDecoration('Gender Preference'),
+              items: ['male', 'female'].map((String gender) { // Changed to lowercase to match web app
                 return DropdownMenuItem<String>(
                   value: gender,
-                  child: Text(gender),
+                  child: Text(gender.capitalize()), // Capitalize for display
                 );
               }).toList(),
               onChanged: (String? newValue) {
@@ -731,7 +840,7 @@ class _CreateBedFormState extends State<_CreateBedForm> {
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please select a gender';
+                  return 'Please select a gender preference';
                 }
                 return null;
               },
@@ -741,26 +850,36 @@ class _CreateBedFormState extends State<_CreateBedForm> {
               controller: _descriptionController,
               labelText: 'Description',
               maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _priceController,
-              labelText: 'Price',
-              keyboardType: TextInputType.number,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a price';
-                }
-                if (double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                if (value == null || value.trim().isEmpty) {
+                  return 'Description is required.';
                 }
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
+            _buildTextField(
+              controller: _pricePerBedController,
+              labelText: 'Price per Bed',
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a price';
+                }
+                final price = double.tryParse(value);
+                if (price == null) {
+                  return 'Please enter a valid number';
+                }
+                if (price > 600) {
+                  return 'Price per bed cannot exceed 600.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>( // Changed to String
               value: _selectedRoomId,
-              decoration: _inputDecoration('Attach Room'),
+              decoration: _inputDecoration('Attach to Room'),
               items: widget.rooms.map((Room room) {
                 return DropdownMenuItem<String>(
                   value: room.id,
@@ -773,7 +892,7 @@ class _CreateBedFormState extends State<_CreateBedForm> {
                 });
               },
               validator: (value) {
-                if (value == null || value.isEmpty) {
+                if (value == null) {
                   return 'Please select a room';
                 }
                 return null;
@@ -805,12 +924,13 @@ class _CreateBedFormState extends State<_CreateBedForm> {
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       final newBed = Bed(
-                        id: widget.bed?.id ?? DateTime.now().toIso8601String(),
-                        bedName: _bedNameController.text,
-                        gender: _selectedGender!,
+                        id: widget.bed?.id, // Use existing ID for update
+                        bedNumber: _bedNumberController.text,
+                        coRoommateGender: _selectedGender!,
                         description: _descriptionController.text,
-                        price: double.parse(_priceController.text),
-                        roomId: _selectedRoomId!,
+                        pricePerBed: double.parse(_pricePerBedController.text),
+                        property: widget.propertyId, // Host's property ID
+                        roomId: _selectedRoomId!, // Room ID
                       );
                       widget.onSave(newBed);
                     }
@@ -855,6 +975,14 @@ InputDecoration _inputDecoration(String labelText) {
       borderRadius: BorderRadius.circular(8.0),
       borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2.0),
     ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.red, width: 2.0),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: const BorderSide(color: Colors.red, width: 2.0),
+    ),
   );
 }
 
@@ -873,4 +1001,21 @@ Widget _buildTextField({
     decoration: _inputDecoration(labelText),
     validator: validator,
   );
+}
+
+extension StringExtension on String {
+    String capitalize() {
+      return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
+    }
+}
+
+extension IterableExtension<T> on Iterable<T> {
+  T? firstWhereOrNull(bool Function(T element) test) {
+    for (var element in this) {
+      if (test(element)) {
+        return element;
+      }
+    }
+    return null;
+  }
 }

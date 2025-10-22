@@ -248,7 +248,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
                             : _subTabIndex == 0
                                 ? BookingContent(
                                     bookings: _upcomingBookings + _ongoingBookings) // Combine for simplicity
-                                : ListVacantBedsContent(),
+                                : ListVacantBedsContent(propertyId: widget.propertyId),
                   ),
                 ),
               ],
@@ -525,7 +525,8 @@ class BookingCard extends StatelessWidget {
 
 // 5️⃣ LIST VACANT BEDS TAB CONTENT
 class ListVacantBedsContent extends StatelessWidget {
-  ListVacantBedsContent({super.key});
+  final String propertyId;
+  ListVacantBedsContent({super.key, required this.propertyId});
 
   @override
   Widget build(BuildContext context) {
@@ -541,7 +542,7 @@ class ListVacantBedsContent extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ListYourRoomBedScreen()),
+              MaterialPageRoute(builder: (context) => ListYourRoomBedScreen(propertyId: propertyId)),
             );
           },
         ),
