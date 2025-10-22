@@ -594,7 +594,7 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
   void initState() {
     super.initState();
     _roomNumberController = TextEditingController(text: widget.room?.roomNumber);
-    _descriptionController = TextEditingController(text: widget.room?.description);
+    _descriptionController = TextEditingController(text: widget.room?.description ?? "Spacious room with a comfortable bed, perfect for a peaceful stay.");
     _capacityController = TextEditingController(text: widget.room?.capacity.toString());
     _pricePerRoomController = TextEditingController(text: widget.room?.pricePerRoom.toString());
   }
@@ -766,24 +766,29 @@ class _CreateBedForm extends StatefulWidget {
 
 class _CreateBedFormState extends State<_CreateBedForm> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _bedNumberController; // Changed name
-  late TextEditingController _descriptionController;
-  late TextEditingController _pricePerBedController; // Changed name
+  late TextEditingController _bedNumberController;
+  late TextEditingController _pricePerBedController;
   String? _selectedGender;
+  String? _selectedDescription;
+
+  final List<String> _bedDescriptionOptions = [
+    "Comfortable bed in a 2-sharing room, ideal for friends or siblings.",
+    "Spacious bed in a 3-sharing room, perfect for a small group.",
+    "Cozy bed in a 4-sharing room, great for budget-conscious travelers.",
+  ];
 
   @override
   void initState() {
     super.initState();
     _bedNumberController = TextEditingController(text: widget.bed?.bedNumber);
-    _descriptionController = TextEditingController(text: widget.bed?.description);
     _pricePerBedController = TextEditingController(text: widget.bed?.pricePerBed.toString());
     _selectedGender = widget.bed?.coRoommateGender;
+    _selectedDescription = widget.bed?.description ?? _bedDescriptionOptions[0];
   }
 
   @override
   void dispose() {
     _bedNumberController.dispose();
-    _descriptionController.dispose();
     _pricePerBedController.dispose();
     super.dispose();
   }
@@ -839,12 +844,22 @@ class _CreateBedFormState extends State<_CreateBedForm> {
               },
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _descriptionController,
-              labelText: 'Description',
-              maxLines: 3,
+            DropdownButtonFormField<String>(
+              value: _selectedDescription,
+              decoration: _inputDecoration('Description'),
+              items: _bedDescriptionOptions.map((String description) {
+                return DropdownMenuItem<String>(
+                  value: description,
+                  child: Text(description),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedDescription = newValue;
+                });
+              },
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
+                if (value == null || value.isEmpty) {
                   return 'Description is required.';
                 }
                 return null;
@@ -899,7 +914,7 @@ class _CreateBedFormState extends State<_CreateBedForm> {
                         id: widget.bed?.id, // Use existing ID for update
                         bedNumber: _bedNumberController.text,
                         coRoommateGender: _selectedGender!,
-                        description: _descriptionController.text,
+                        description: _selectedDescription!,
                         pricePerBed: double.parse(_pricePerBedController.text),
                         property: widget.propertyId, // Host's property ID
                       );
