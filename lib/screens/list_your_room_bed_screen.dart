@@ -586,23 +586,28 @@ class _CreateRoomForm extends StatefulWidget {
 class _CreateRoomFormState extends State<_CreateRoomForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _roomNumberController;
-  late TextEditingController _descriptionController;
   late TextEditingController _capacityController;
-  late TextEditingController _pricePerRoomController; // Changed name
+  late TextEditingController _pricePerRoomController;
+  String? _selectedDescription;
+
+  final List<String> _roomDescriptionOptions = [
+    "Spacious room with a comfortable bed, perfect for a peaceful stay.",
+    "Cozy room with modern amenities, ideal for solo travelers or couples.",
+    "Bright and airy room with a private balcony, offering stunning views.",
+  ];
 
   @override
   void initState() {
     super.initState();
     _roomNumberController = TextEditingController(text: widget.room?.roomNumber);
-    _descriptionController = TextEditingController(text: widget.room?.description ?? "Spacious room with a comfortable bed, perfect for a peaceful stay.");
     _capacityController = TextEditingController(text: widget.room?.capacity.toString());
     _pricePerRoomController = TextEditingController(text: widget.room?.pricePerRoom.toString());
+    _selectedDescription = widget.room?.description ?? _roomDescriptionOptions[0];
   }
 
   @override
   void dispose() {
     _roomNumberController.dispose();
-    _descriptionController.dispose();
     _capacityController.dispose();
     _pricePerRoomController.dispose();
     super.dispose();
@@ -637,12 +642,22 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
               },
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _descriptionController,
-              labelText: 'Description',
-              maxLines: 3,
+            DropdownButtonFormField<String>(
+              value: _selectedDescription,
+              decoration: _inputDecoration('Description'),
+              items: _roomDescriptionOptions.map((String description) {
+                return DropdownMenuItem<String>(
+                  value: description,
+                  child: Text(description),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedDescription = newValue;
+                });
+              },
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
+                if (value == null || value.isEmpty) {
                   return 'Description is required.';
                 }
                 return null;
@@ -711,7 +726,7 @@ class _CreateRoomFormState extends State<_CreateRoomForm> {
                       final newRoom = Room(
                         id: widget.room?.id, // Use existing ID for update
                         roomNumber: _roomNumberController.text,
-                        description: _descriptionController.text,
+                        description: _selectedDescription!,
                         capacity: int.parse(_capacityController.text),
                         pricePerRoom: double.parse(_pricePerRoomController.text),
                         property: widget.propertyId,
