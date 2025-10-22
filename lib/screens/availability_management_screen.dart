@@ -203,7 +203,7 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
         // For now, assuming update only.
         throw Exception('Availability ID is null for update operation.');
       }
-      await _apiService.updateRoomDuration(availability.roomId, availability.toJson());
+      await _apiService.updateRoomDuration(availability.id!, availability.toJson());
       _fetchData(); // Refresh data
     } catch (e) {
       _showErrorSnackBar('Failed to update room availability: $e');
@@ -217,7 +217,7 @@ class _AvailabilityManagementScreenState extends State<AvailabilityManagementScr
         // For now, assuming update only.
         throw Exception('Availability ID is null for update operation.');
       }
-      await _apiService.updateBedDuration(availability.bedId, availability.toJson());
+      await _apiService.updateBedDuration(availability.id!, availability.toJson());
       _fetchData(); // Refresh data
     } catch (e) {
       _showErrorSnackBar('Failed to update bed availability: $e');
