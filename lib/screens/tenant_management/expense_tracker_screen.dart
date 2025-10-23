@@ -236,6 +236,7 @@ class __AddExpenseDialogState extends State<_AddExpenseDialog> {
           if (token != null) 'Authorization': 'Token $token',
         },
         body: json.encode({
+          'property_id': widget.propertyId,
           'description': _description,
           'amount': _amount,
           'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
