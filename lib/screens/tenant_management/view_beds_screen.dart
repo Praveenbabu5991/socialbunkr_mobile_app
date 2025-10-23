@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:socialbunkr_mobile_app/screens/tenant_management/assign_tenant_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/tenant_detail_screen.dart';
 
 // Model
 class Bed {
@@ -168,8 +169,14 @@ class _ViewBedsScreenState extends State<ViewBedsScreen> {
                               onSelected: (value) {
                                 if (value == 'vacate') {
                                   _vacateBed(bed.id);
+                                } else if (value == 'view_details') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TenantDetailScreen(tenantId: bed.tenantId!),
+                                    ),
+                                  );
                                 }
-                                // TODO: Handle 'view_details'
                               },
                               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                                 const PopupMenuItem<String>(
