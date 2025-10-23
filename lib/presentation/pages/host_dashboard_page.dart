@@ -1,11 +1,17 @@
 
 import 'package:flutter/material.dart';
-import 'package:socialbunkr_mobile_app/screens/list_your_room_bed_screen.dart'; // Import the new screen
-import 'package:socialbunkr_mobile_app/screens/availability_management_screen.dart'; // Import the new screen
+import 'package:socialbunkr_mobile_app/screens/list_your_room_bed_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/availability_management_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/expense_tracker_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/occupancy_overview_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/rating_review_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/rent_payment_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/tickets_screen.dart';
+
 
 // 🎨 BRAND COLORS & STYLES
 const Color primaryDarkGreen = Color(0xFF0B3D2E);
@@ -158,13 +164,10 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
     });
 
     try {
-      // Replace with actual propertyID from user context or selection
-      // For now, using a placeholder. You'll need to get this dynamically.
       final String? apiBaseUrl = dotenv.env['API_BASE_URL'];
       final String propertyID = widget.propertyId;
       final _secureStorage = FlutterSecureStorage();
       final token = await _secureStorage.read(key: 'token');
-      print('Auth Token: $token'); // Debug print
 
       if (apiBaseUrl == null) {
         throw Exception('API_BASE_URL is not defined in .env');
@@ -187,7 +190,6 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
           _ongoingBookings = (data['Ongoing'] as List)
               .map((e) => Booking.fromJson(e))
               .toList();
-          // You can also parse Completed and Cancelled if needed
         });
       } else {
         _errorMessage =
@@ -224,7 +226,6 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
           onTabSelected: _onMainTabSelected,
         ),
         const SizedBox(height: 20),
-        // Conditionally show SubTabToggle and its content
         if (_mainTabIndex == 0)
           Expanded(
             child: Column(
@@ -248,7 +249,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
                               )
                             : _subTabIndex == 0
                                 ? BookingContent(
-                                    bookings: _upcomingBookings + _ongoingBookings) // Combine for simplicity
+                                    bookings: _upcomingBookings + _ongoingBookings)
                                 : ListVacantBedsContent(propertyId: widget.propertyId),
                   ),
                 ),
@@ -257,20 +258,55 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
           )
         else
           const Expanded(
-            child: Center(
-              child: Text(
-                "Tenant Management Content",
-                style: TextStyle(
-                    fontFamily: fontName,
-                    fontSize: 16,
-                    color: neutralGreenGray),
-              ),
-            ),
+            child: TenantManagementView(),
           ),
       ],
     );
   }
 }
+
+class TenantManagementView extends StatelessWidget {
+  const TenantManagementView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 5,
+      child: Scaffold(
+        backgroundColor: lightGrayBackground,
+        appBar: AppBar(
+          backgroundColor: backgroundWhite,
+          elevation: 1,
+          toolbarHeight: 0,
+          bottom: const TabBar(
+            isScrollable: true,
+            labelColor: primaryDarkGreen,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: accentGold,
+            indicatorWeight: 3,
+            tabs: [
+              Tab(icon: Icon(Icons.pie_chart_outline), text: "Occupancy"),
+              Tab(icon: Icon(Icons.payment_outlined), text: "Rent"),
+              Tab(icon: Icon(Icons.receipt_long_outlined), text: "Expenses"),
+              Tab(icon: Icon(Icons.support_agent_outlined), text: "Tickets"),
+              Tab(icon: Icon(Icons.star_outline), text: "Reviews"),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            OccupancyOverviewScreen(),
+            RentPaymentScreen(),
+            ExpenseTrackerScreen(),
+            TicketsScreen(),
+            RatingReviewScreen(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 // 2️⃣ TOP TOGGLE (MAIN TABS)
 class MainTabToggle extends StatelessWidget {
