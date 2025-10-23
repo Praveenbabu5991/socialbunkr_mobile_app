@@ -257,8 +257,8 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
             ),
           )
         else
-          const Expanded(
-            child: TenantManagementView(),
+          Expanded(
+            child: TenantManagementView(propertyId: widget.propertyId),
           ),
       ],
     );
@@ -266,7 +266,8 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
 }
 
 class TenantManagementView extends StatelessWidget {
-  const TenantManagementView({super.key});
+  final String propertyId;
+  const TenantManagementView({super.key, required this.propertyId});
 
   @override
   Widget build(BuildContext context) {
@@ -293,13 +294,13 @@ class TenantManagementView extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            OccupancyOverviewScreen(),
-            RentPaymentScreen(),
-            ExpenseTrackerScreen(),
-            TicketsScreen(),
-            RatingReviewScreen(),
+            OccupancyOverviewScreen(propertyId: propertyId),
+            RentPaymentScreen(propertyId: propertyId),
+            ExpenseTrackerScreen(propertyId: propertyId),
+            TicketsScreen(propertyId: propertyId),
+            RatingReviewScreen(propertyId: propertyId),
           ],
         ),
       ),
