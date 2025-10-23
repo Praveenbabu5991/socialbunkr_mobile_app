@@ -281,6 +281,10 @@ class _PaymentCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () => onMarkAsPaid(payment.paymentId),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(const Color(0xFFE9B949)), // Yellow
+                        foregroundColor: MaterialStateProperty.all(Colors.black), // Black text
+                      ),
                       child: const Text('Mark as Paid'),
                     ),
                   ],

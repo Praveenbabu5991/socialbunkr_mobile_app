@@ -132,7 +132,8 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddExpenseDialog,
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFFE9B949), // Yellow
+        child: const Icon(Icons.add, color: Colors.black), // Black icon for contrast
       ),
     );
   }
