@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/widgets/custom_month_year_picker.dart';
 
 // Model
 class Payment {
@@ -187,14 +188,15 @@ class _RentPaymentScreenState extends State<RentPaymentScreen> {
             avatar: const Icon(Icons.calendar_today),
             label: Text(DateFormat('MMM yyyy').format(_selectedMonth)),
             onPressed: () async {
-              final DateTime? picked = await showDatePicker(
+              final DateTime? picked = await showDialog<DateTime>(
                 context: context,
-                initialDate: _selectedMonth,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2030),
-                initialDatePickerMode: DatePickerMode.year,
+                builder: (context) => CustomMonthYearPickerDialog(
+                  initialDate: _selectedMonth,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                ),
               );
-              if (picked != null && (picked.year != _selectedMonth.year || picked.month != _selectedMonth.month)) {
+              if (picked != null && picked != _selectedMonth) {
                 setState(() {
                   _selectedMonth = picked;
                   _loadPayments();
