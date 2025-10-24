@@ -22,6 +22,8 @@ class PropertyCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap, // Use the provided onTap callback
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
