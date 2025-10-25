@@ -210,11 +210,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
     });
   }
 
-  void _onSubTabSelected(int index) {
-    setState(() {
-      _subTabIndex = index;
-    });
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -228,32 +224,48 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
         const SizedBox(height: 20),
         if (_mainTabIndex == 0)
           Expanded(
-            child: Column(
-              children: [
-                SubTabToggle(
-                  selectedIndex: _subTabIndex,
-                  onTabSelected: _onSubTabSelected,
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: _isLoadingBookings
-                        ? const Center(child: CircularProgressIndicator())
-                        : _errorMessage.isNotEmpty
-                            ? Center(
-                                child: Text(
-                                  _errorMessage,
-                                  style: const TextStyle(color: Colors.red),
-                                ),
-                              )
-                            : _subTabIndex == 0
-                                ? BookingContent(
-                                    bookings: _upcomingBookings + _ongoingBookings)
-                                : ListVacantBedsContent(propertyId: widget.propertyId),
+            child: DefaultTabController(
+              length: 2, // Two tabs: Booking and List Vacant Beds
+              initialIndex: _subTabIndex, // Use the existing state for initial selection
+              child: Column(
+                children: [
+                  TabBar(
+                    isScrollable: true,
+                    labelColor: primaryDarkGreen,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: accentGold,
+                    indicatorWeight: 3,
+                    onTap: (index) {
+                      setState(() {
+                        _subTabIndex = index; // Update _subTabIndex when a tab is tapped
+                      });
+                    },
+                    tabs: const [
+                      Tab(icon: Icon(Icons.book_outlined), text: "Booking"),
+                      Tab(icon: Icon(Icons.bed_outlined), text: "List Vacant Beds"),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _isLoadingBookings
+                            ? const Center(child: CircularProgressIndicator())
+                            : _errorMessage.isNotEmpty
+                                ? Center(
+                                    child: Text(
+                                      _errorMessage,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  )
+                                : BookingContent(
+                                    bookings: _upcomingBookings + _ongoingBookings),
+                        ListVacantBedsContent(propertyId: widget.propertyId),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         else
@@ -274,7 +286,7 @@ class TenantManagementView extends StatelessWidget {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
-        backgroundColor: lightGrayBackground,
+
         appBar: AppBar(
           backgroundColor: backgroundWhite,
           elevation: 1,
@@ -363,60 +375,7 @@ class MainTabToggle extends StatelessWidget {
   }
 }
 
-// 3️⃣ SUB TABS (UNDER MAIN TAB)
-class SubTabToggle extends StatelessWidget {
-  final int selectedIndex;
-  final ValueChanged<int> onTabSelected;
 
-  const SubTabToggle(
-      {super.key, required this.selectedIndex, required this.onTabSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildSubTab(context, "Booking", 0),
-          const SizedBox(width: 8),
-          _buildSubTab(context, "List Vacant Beds", 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubTab(BuildContext context, String text, int index) {
-    final bool isActive = selectedIndex == index;
-    return GestureDetector(
-      onTap: () => onTabSelected(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: isActive ? primaryDarkGreen : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: primaryDarkGreen,
-            width: 1.5,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontFamily: fontName,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-              color: isActive ? Colors.white : primaryDarkGreen,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // 4️⃣ BOOKING TAB CONTENT
 class BookingContent extends StatelessWidget {
