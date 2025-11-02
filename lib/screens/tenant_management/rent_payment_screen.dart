@@ -100,7 +100,13 @@ class _RentPaymentScreenState extends State<RentPaymentScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment marked as paid!'), backgroundColor: Colors.green),
+                          SnackBar(
+                  content: const Text(
+                    'Payment marked as paid!',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  backgroundColor: Colors.grey[300],
+                ),
         );
         setState(() {
           _loadPayments();
@@ -130,7 +136,13 @@ class _RentPaymentScreenState extends State<RentPaymentScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reminder sent successfully!'), backgroundColor: Colors.blue),
+          SnackBar(
+            content: const Text(
+              'Reminder sent successfully!',
+              style: TextStyle(color: Colors.black),
+            ),
+            backgroundColor: Colors.grey[300],
+          ),
         );
       } else {
         throw Exception('Failed to send reminder: ${response.body}');

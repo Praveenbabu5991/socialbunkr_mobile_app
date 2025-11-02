@@ -57,7 +57,13 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
         widget.onRoomCreated();
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Room created successfully!'), backgroundColor: Colors.green),
+                          SnackBar(
+                  content: const Text(
+                    'Room created successfully!',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  backgroundColor: Colors.grey[300],
+                ),
         );
       } else {
         final errorData = json.decode(response.body);

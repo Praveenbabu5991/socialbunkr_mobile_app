@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class AssignTenantScreen extends StatefulWidget {
   final String bedId;
@@ -18,6 +19,7 @@ class AssignTenantScreen extends StatefulWidget {
 class _AssignTenantScreenState extends State<AssignTenantScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _upgradeLoading = false;
 
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -26,6 +28,17 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
   final _advanceController = TextEditingController();
   DateTime? _joinDate;
 
+  late Razorpay _razorpay;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -33,7 +46,110 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
     _govtIdController.dispose();
     _rentController.dispose();
     _advanceController.dispose();
+    _razorpay.clear();
     super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Payment successful!',
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.grey[300],
+      ),
+    );
+    Navigator.of(context).pop();
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: ${response.message}'), backgroundColor: Colors.red),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    // Do something when an external wallet is selected
+  }
+
+  Future<void> _handleUpgrade() async {
+    setState(() {
+      _upgradeLoading = true;
+    });
+
+    try {
+      final apiBaseUrl = dotenv.env['API_BASE_URL'];
+      final secureStorage = FlutterSecureStorage();
+      final token = await secureStorage.read(key: 'token');
+
+      final response = await http.post(
+        Uri.parse('$apiBaseUrl/api/pg_tenant/subscriptions/initiate/'),
+        headers: {
+          if (token != null) 'Authorization': 'Token $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final subscriptionData = json.decode(response.body);
+        final subscriptionId = subscriptionData['subscription_id'];
+
+        var options = {
+          'key': dotenv.env['RAZORPAY_KEY_ID'],
+          'subscription_id': subscriptionId,
+          'name': 'AffordaNest Pro',
+          'description': 'Unlimited access to all features.',
+          'prefill': {
+            'contact': '9999999999',
+            'email': 'test@example.com'
+          }
+        };
+        _razorpay.open(options);
+      } else {
+        throw Exception('Failed to initiate subscription');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() {
+        _upgradeLoading = false;
+      });
+    }
+  }
+
+  void _showUpgradeDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Upgrade to Pro'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('You have reached the free tenant limit.'),
+                Text('Upgrade to Pro to add unlimited tenants.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              onPressed: _upgradeLoading ? null : _handleUpgrade,
+              child: _upgradeLoading
+                  ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                  : const Text('Upgrade Now'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _selectJoinDate(BuildContext context) async {
@@ -90,8 +206,16 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
         widget.onTenantAssigned();
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tenant assigned successfully!'), backgroundColor: Colors.green),
+          SnackBar(
+          content: const Text(
+            'Tenant assigned successfully!',
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.grey[300],
+        ),
         );
+      } else if (response.statusCode == 403) {
+        _showUpgradeDialog();
       } else {
         final errorData = json.decode(response.body);
         throw Exception('Failed to assign tenant: ${errorData.toString()}');

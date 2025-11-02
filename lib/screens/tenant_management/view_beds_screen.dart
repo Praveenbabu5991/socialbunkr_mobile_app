@@ -92,7 +92,13 @@ class _ViewBedsScreenState extends State<ViewBedsScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bed vacated successfully'), backgroundColor: Colors.green),
+                          SnackBar(
+                  content: const Text(
+                    'Bed vacated successfully',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  backgroundColor: Colors.grey[300],
+                ),
         );
         _refreshBeds();
       } else {

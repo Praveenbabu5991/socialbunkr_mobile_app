@@ -47,7 +47,13 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
         });
         widget.onStatusUpdated();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Status updated successfully!'), backgroundColor: Colors.green),
+                          SnackBar(
+                  content: const Text(
+                    'Status updated successfully!',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  backgroundColor: Colors.grey[300],
+                ),
         );
       } else {
         throw Exception('Failed to update status: ${response.body}');

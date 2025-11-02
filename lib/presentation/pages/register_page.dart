@@ -51,9 +51,12 @@ class _RegisterPageState extends State<RegisterPage> {
             if (state is SignupSuccess) {
               // Navigate to login page or show success message
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Signup Successful!'),
-                  backgroundColor: Colors.green,
+                SnackBar(
+                  content: const Text(
+                    'Signup Successful!',
+                    style: TextStyle(color: Colors.black),
+                  ),
+                  backgroundColor: Colors.grey[300],
                 ),
               );
               Navigator.pushNamed(context, '/login');
