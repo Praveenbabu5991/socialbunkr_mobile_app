@@ -30,7 +30,10 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Poppins',
           scaffoldBackgroundColor: Colors.white,
         ),
-        home: BlocBuilder<AuthenticationBloc, AuthenticationState>(
+        home: BlocConsumer<AuthenticationBloc, AuthenticationState>(
+          listener: (context, state) {
+            // This listener can handle navigations or snackbars if needed in the future
+          },
           builder: (context, state) {
             if (state is AuthenticationAuthenticated) {
               return const HomePage();

@@ -9,6 +9,7 @@ import '../../routes/app_router.dart';
 import 'package:socialbunkr_mobile_app/presentation/widgets/custom_button.dart'; // Added for "Verify Account" button
 import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
 import 'package:socialbunkr_mobile_app/presentation/widgets/social_bunkr_header.dart';
+import 'package:socialbunkr_mobile_app/presentation/pages/landing_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -376,8 +377,79 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Profile Tab'),
+    return BlocListener<AuthenticationBloc, AuthenticationState>(
+      listener: (context, state) {
+        if (state is AuthenticationUnauthenticated) {
+          // Navigate to the landing page and remove all previous routes
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => LandingPage()),
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: Colors.black,
+        ),
+        body: BlocBuilder<AuthenticationBloc, AuthenticationState>(
+          builder: (context, state) {
+            if (state is AuthenticationAuthenticated) {
+              return ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: <Widget>[
+                  Column(
+                    children: [
+                      const CircleAvatar(
+                        radius: 50,
+                        child: Icon(Icons.person, size: 50),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '${state.firstName} ${state.lastName}',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                  Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit_outlined),
+                          title: const Text('Edit Profile'),
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () { /* TODO: Navigate to Edit Profile */ },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.settings_outlined),
+                          title: const Text('Settings'),
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () { /* TODO: Navigate to Settings */ },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.logout, color: Colors.red),
+                          title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                          onTap: () {
+                            context.read<AuthenticationBloc>().add(LoggedOut());
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }
+            // While logging out, show a loading indicator.
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
+      ),
     );
   }
 }
