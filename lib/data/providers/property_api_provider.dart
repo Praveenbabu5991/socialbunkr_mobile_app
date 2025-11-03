@@ -1,14 +1,20 @@
 
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import './http_client.dart';
 
 class PropertyApiProvider {
-  final HttpClient _httpClient = HttpClient(baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://127.0.0.1:8000');
+  final String _apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
+  late final HttpClient _httpClient;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  PropertyApiProvider() {
+    _httpClient = HttpClient(baseUrl: _apiBaseUrl);
+  }
 
   Future<Map<String, dynamic>> addProperty(Map<String, dynamic> propertyData) async {
     final response = await _httpClient.post('/api/hosts/properties/', body: jsonEncode(propertyData));
@@ -29,7 +35,7 @@ class PropertyApiProvider {
   }
 
   Future<void> verifyProperty(String propertyId, String documentType, XFile document) async {
-    final request = http.MultipartRequest('POST', Uri.parse('${dotenv.env['API_BASE_URL']}/api/hosts/property-verifications/'));
+    final request = http.MultipartRequest('POST', Uri.parse('$_apiBaseUrl/api/hosts/property-verifications/'));
     request.fields['property'] = propertyId;
     request.fields['document_type'] = documentType;
     request.files.add(http.MultipartFile.fromBytes(

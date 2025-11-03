@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class HostApiService {
-  final String? _apiBaseUrl = dotenv.env['API_BASE_URL'];
+  final String? _apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
   final _secureStorage = const FlutterSecureStorage();
 
   Future<Map<String, String>> _getHeaders() async {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -63,7 +64,7 @@ class _RentPaymentScreenState extends State<RentPaymentScreen> {
   }
 
   Future<List<Payment>> _fetchPayments() async {
-    final apiBaseUrl = dotenv.env['API_BASE_URL'];
+    final apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
     final secureStorage = FlutterSecureStorage();
     final token = await secureStorage.read(key: 'token');
     final monthFormat = DateFormat('yyyy-MM').format(_selectedMonth);
@@ -87,7 +88,7 @@ class _RentPaymentScreenState extends State<RentPaymentScreen> {
 
   Future<void> _markAsPaid(String paymentId) async {
      try {
-      final apiBaseUrl = dotenv.env['API_BASE_URL'];
+      final apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
       final secureStorage = FlutterSecureStorage();
       final token = await secureStorage.read(key: 'token');
       final response = await http.post(
@@ -123,7 +124,7 @@ class _RentPaymentScreenState extends State<RentPaymentScreen> {
 
   Future<void> _sendReminder(String paymentId) async {
     try {
-      final apiBaseUrl = dotenv.env['API_BASE_URL'];
+      final apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
       final secureStorage = FlutterSecureStorage();
       final token = await secureStorage.read(key: 'token');
       final response = await http.post(

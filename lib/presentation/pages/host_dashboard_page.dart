@@ -1,4 +1,5 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:socialbunkr_mobile_app/screens/list_your_room_bed_screen.dart';
 import 'package:socialbunkr_mobile_app/screens/availability_management_screen.dart';
@@ -164,7 +165,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
     });
 
     try {
-      final String? apiBaseUrl = dotenv.env['API_BASE_URL'];
+      final String? apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
       final String propertyID = widget.propertyId;
       final _secureStorage = FlutterSecureStorage();
       final token = await _secureStorage.read(key: 'token');

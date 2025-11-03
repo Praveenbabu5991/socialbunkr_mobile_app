@@ -1,10 +1,11 @@
 
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';
 import './http_client.dart';
 
 class UserApiProvider {
-  final HttpClient _httpClient = HttpClient(baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://127.0.0.1:8000');
+  final HttpClient _httpClient = HttpClient(baseUrl: kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080'));
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await _httpClient.post('/api/users/login/', body: jsonEncode({'email': email, 'password': password}));

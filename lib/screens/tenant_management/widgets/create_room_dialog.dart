@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -36,7 +37,7 @@ class _CreateRoomDialogState extends State<CreateRoomDialog> {
     });
 
     try {
-      final apiBaseUrl = dotenv.env['API_BASE_URL'];
+      final apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
       final secureStorage = FlutterSecureStorage();
       final token = await secureStorage.read(key: 'token');
 
