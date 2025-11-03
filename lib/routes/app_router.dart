@@ -8,6 +8,7 @@ import 'package:socialbunkr_mobile_app/presentation/pages/verify_property_page.d
 import 'package:socialbunkr_mobile_app/presentation/pages/property_detail_page.dart';
 import 'package:socialbunkr_mobile_app/presentation/pages/host_dashboard_page.dart'; // Added
 import 'package:socialbunkr_mobile_app/presentation/pages/host_verification_page.dart'; // Added
+import 'package:socialbunkr_mobile_app/presentation/pages/host_bank_details_page.dart';
 
 class AppRouter {
   static const String landing = '/';
@@ -19,6 +20,7 @@ class AppRouter {
   static const String propertyDetail = '/property-detail';
   static const String hostDashboard = '/host-dashboard'; // Added
   static const String hostVerification = '/host-verification'; // Added
+  static const String hostBankDetails = '/host-bank-details';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -43,6 +45,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => HostDashboardPage(propertyId: propertyId));
       case hostVerification: // Added
         return MaterialPageRoute(builder: (_) => const HostVerificationPage()); // Added
+      case hostBankDetails:
+        return MaterialPageRoute(builder: (_) => const HostBankDetailsPage());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

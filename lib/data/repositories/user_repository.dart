@@ -79,4 +79,8 @@ class UserRepository {
     await _secureStorage.write(key: 'organization_is_verified', value: isVerified.toString());
     return isVerified;
   }
+
+  Future<void> saveBankDetails({required String accountNumber, required String ifscCode}) {
+    return _userApiProvider.saveBankDetails(accountNumber: accountNumber, ifscCode: ifscCode);
+  }
 }

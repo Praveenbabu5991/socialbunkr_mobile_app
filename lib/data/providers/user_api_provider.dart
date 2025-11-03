@@ -48,4 +48,14 @@ class UserApiProvider {
       throw Exception('Failed to fetch organization details');
     }
   }
+
+  Future<void> saveBankDetails({required String accountNumber, required String ifscCode}) async {
+    final response = await _httpClient.post('/api/users/host-bank-details/', body: jsonEncode({
+      'bank_account_number': accountNumber,
+      'ifsc_code': ifscCode,
+    }));
+    if (response.statusCode != 201) {
+      throw Exception('Failed to save bank details');
+    }
+  }
 }

@@ -426,6 +426,15 @@ class ProfileTab extends StatelessWidget {
                         ),
                         const Divider(height: 1),
                         ListTile(
+                          leading: const Icon(Icons.account_balance_wallet_outlined),
+                          title: const Text('Bank Details'),
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () {
+                            Navigator.pushNamed(context, AppRouter.hostBankDetails);
+                          },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
                           leading: const Icon(Icons.settings_outlined),
                           title: const Text('Settings'),
                           trailing: const Icon(Icons.arrow_forward_ios),
