@@ -375,6 +375,9 @@ class _HomeTabState extends State<HomeTab> {
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
+  static const Color deepForestGreen = Color(0xFF355E4C);
+  static const Color mustardYellow = Color(0xFFD1A223);
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthenticationBloc, AuthenticationState>(
@@ -402,9 +405,10 @@ class ProfileTab extends StatelessWidget {
                 children: <Widget>[
                   Column(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 50,
-                        child: Icon(Icons.person, size: 50),
+                        backgroundColor: mustardYellow,
+                        child: Icon(Icons.person, size: 50, color: deepForestGreen,),
                       ),
                       const SizedBox(height: 16),
                       Text(
