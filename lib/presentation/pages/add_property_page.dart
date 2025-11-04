@@ -6,6 +6,7 @@ import '../../data/repositories/property_repository.dart';
 import '../../logic/blocs/my_properties/my_properties_bloc.dart'; // Added
 import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
 
+
 class AddPropertyPage extends StatelessWidget {
   const AddPropertyPage({super.key});
 
@@ -70,9 +71,9 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
           }
           if (state is AddPropertySuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Property added successfully!'),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: const Text('Property added successfully!', style: TextStyle(color: Colors.black)),
+                backgroundColor: Colors.grey[300],
               ),
             );
             Navigator.of(context).pop();

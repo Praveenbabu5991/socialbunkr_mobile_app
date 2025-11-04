@@ -180,7 +180,10 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                               onPressed: isVerified // Only enable if verified
                                   ? () {
-                                      Navigator.pushNamed(context, '/add-property');
+                                      Navigator.pushNamed(context, '/add-property').then((_) {
+                                        // Refetch properties when returning from the add property screen
+                                        context.read<MyPropertiesBloc>().add(FetchMyProperties());
+                                      });
                                     }
                                   : () {
                                       ScaffoldMessenger.of(context).showSnackBar(

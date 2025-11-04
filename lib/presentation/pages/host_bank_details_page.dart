@@ -55,7 +55,10 @@ class _HostBankDetailsViewState extends State<_HostBankDetailsView> {
         listener: (context, state) {
           if (state is HostBankDetailsSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Bank Details Saved Successfully')),
+              const SnackBar(
+                content: Text('Bank Details Saved Successfully', style: TextStyle(color: Colors.black)),
+                backgroundColor: Colors.grey[300],
+              ),
             );
             Navigator.of(context).pop();
           }

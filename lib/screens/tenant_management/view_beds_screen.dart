@@ -8,6 +8,8 @@ import 'package:socialbunkr_mobile_app/screens/tenant_management/assign_tenant_s
 import 'package:socialbunkr_mobile_app/screens/tenant_management/tenant_detail_screen.dart';
 
 // Model
+import 'package:socialbunkr_mobile_app/core/theme/app_theme.dart';
+
 class Bed {
   final String id;
   final String bedCode;
