@@ -126,11 +126,20 @@ class MyPropertiesTab extends StatelessWidget {
                         child: PropertyCard(
                           property: state.properties[index],
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRouter.hostDashboard,
-                              arguments: state.properties[index]['id'],
-                            );
+                            if (state.properties[index]['is_verified'] == false) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please verify the property first.'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else {
+                              Navigator.pushNamed(
+                                context,
+                                AppRouter.hostDashboard,
+                                arguments: state.properties[index]['id'],
+                              );
+                            }
                           },
                         ),
                       );

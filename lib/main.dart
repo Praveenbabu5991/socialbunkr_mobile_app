@@ -38,6 +38,7 @@ class MyApp extends StatelessWidget {
           ),
           fontFamily: 'Poppins',
           scaffoldBackgroundColor: Colors.white,
+          canvasColor: Colors.white, // Added to ensure white background for Material widgets
         ),
         home: BlocConsumer<AuthenticationBloc, AuthenticationState>(
           listener: (context, state) {
