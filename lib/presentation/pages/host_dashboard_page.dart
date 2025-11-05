@@ -12,6 +12,7 @@ import 'package:socialbunkr_mobile_app/screens/tenant_management/occupancy_overv
 import 'package:socialbunkr_mobile_app/screens/tenant_management/rating_review_screen.dart';
 import 'package:socialbunkr_mobile_app/screens/tenant_management/rent_payment_screen.dart';
 import 'package:socialbunkr_mobile_app/screens/tenant_management/tickets_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/update_property_details_screen.dart';
 
 
 // 🎨 BRAND COLORS & STYLES
@@ -77,7 +78,15 @@ class HostDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: lightGrayBackground,
-      appBar: const HeaderWidget(),
+      appBar: HeaderWidget(
+        propertyId: propertyId,
+        onUpdatePropertyDetails: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => UpdatePropertyDetailsScreen(propertyId: propertyId)),
+          );
+        },
+      ),
       body: HostDashboardBody(propertyId: propertyId),
     );
   }
@@ -85,7 +94,10 @@ class HostDashboardPage extends StatelessWidget {
 
 // 1️⃣ HEADER SECTION
 class HeaderWidget extends StatelessWidget implements PreferredSizeWidget {
-  const HeaderWidget({super.key});
+  final String propertyId;
+  final VoidCallback onUpdatePropertyDetails;
+
+  const HeaderWidget({super.key, required this.propertyId, required this.onUpdatePropertyDetails});
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +128,10 @@ class HeaderWidget extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.edit_outlined, color: primaryDarkGreen),
+          onPressed: onUpdatePropertyDetails,
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0),
           child: CircleAvatar(
@@ -228,44 +244,47 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
             child: DefaultTabController(
               length: 2, // Two tabs: Booking and List Vacant Beds
               initialIndex: _subTabIndex, // Use the existing state for initial selection
-              child: Column(
-                children: [
-                  TabBar(
-                    isScrollable: true,
-                    labelColor: primaryDarkGreen,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: accentGold,
-                    indicatorWeight: 3,
-                    onTap: (index) {
-                      setState(() {
-                        _subTabIndex = index; // Update _subTabIndex when a tab is tapped
-                      });
-                    },
-                    tabs: const [
-                      Tab(icon: Icon(Icons.book_outlined), text: "Booking"),
-                      Tab(icon: Icon(Icons.bed_outlined), text: "List Vacant Beds"),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _isLoadingBookings
-                            ? const Center(child: CircularProgressIndicator())
-                            : _errorMessage.isNotEmpty
-                                ? Center(
-                                    child: Text(
-                                      _errorMessage,
-                                      style: const TextStyle(color: Colors.red),
-                                    ),
-                                  )
-                                : BookingContent(
-                                    bookings: _upcomingBookings + _ongoingBookings),
-                        ListVacantBedsContent(propertyId: widget.propertyId),
+              child: Container(
+                color: lightGrayBackground, // Explicitly set background color
+                child: Column(
+                  children: [
+                    TabBar(
+                      isScrollable: true,
+                      labelColor: primaryDarkGreen,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: accentGold,
+                      indicatorWeight: 3,
+                      onTap: (index) {
+                        setState(() {
+                          _subTabIndex = index; // Update _subTabIndex when a tab is tapped
+                        });
+                      },
+                      tabs: const [
+                        Tab(icon: Icon(Icons.book_outlined), text: "Booking"),
+                        Tab(icon: Icon(Icons.bed_outlined), text: "List Vacant Beds"),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _isLoadingBookings
+                              ? const Center(child: CircularProgressIndicator())
+                              : _errorMessage.isNotEmpty
+                                  ? Center(
+                                      child: Text(
+                                        _errorMessage,
+                                        style: const TextStyle(color: Colors.red),
+                                      ),
+                                    )
+                                  : BookingContent(
+                                      bookings: _upcomingBookings + _ongoingBookings),
+                          ListVacantBedsContent(propertyId: widget.propertyId),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           )
@@ -554,10 +573,7 @@ class ListVacantBedsContent extends StatelessWidget {
             );
           },
         ),
-        PropertyActionCard(
-          icon: Icons.edit_location_alt_outlined,
-          title: "Update Property Details",
-        ),
+        
       ],
     );
   }
