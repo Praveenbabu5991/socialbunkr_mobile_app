@@ -65,8 +65,8 @@ class _HostVerificationFormState extends State<HostVerificationForm> {
           }
           if (state is HostVerificationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Host verification submitted successfully!', style: TextStyle(color: Colors.black)),
+              SnackBar(
+                content: const Text('Host verification submitted successfully!', style: TextStyle(color: Colors.black)),
                 backgroundColor: Colors.grey[300],
               ),
             );

@@ -69,8 +69,8 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
           }
           if (state is VerifyPropertySuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Property verification submitted successfully!', style: TextStyle(color: Colors.black)),
+              SnackBar(
+                content: const Text('Property verification submitted successfully!', style: TextStyle(color: Colors.black)),
                 backgroundColor: Colors.grey[300],
               ),
             );
