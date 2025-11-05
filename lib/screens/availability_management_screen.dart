@@ -11,6 +11,7 @@ class AppColors {
   static const Color lightGray = Color(0xFFE0E0E0);
   static const Color white = Color(0xFFFFFFFF);
   static const Color lightNeutralGreen = Color(0xFFF2F7F5);
+  static const Color lightGrayBackground = Color(0xFFF8FAF8); // Added this line
 }
 
 class AppTextStyles {

@@ -3,9 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:socialbunkr_mobile_app/screens/update_property_details_screen.dart'; // For PropertyDetails model
 
 class HostApiService {
-  final String? _apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+  String get _apiBaseUrl {
+    // Ensure API_BASE_URL_ANDROID includes the correct IP address (e.g., 10.0.2.2 for Android emulator)
+    // and port number for your backend service.
+    return kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+  }
   final _secureStorage = const FlutterSecureStorage();
 
   Future<Map<String, String>> _getHeaders() async {
@@ -14,6 +19,61 @@ class HostApiService {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Token $token',
     };
+  }
+
+  // Property Details APIs
+  Future<PropertyDetails> getPropertyDetails(String propertyId) async {
+    final response = await http.get(
+      Uri.parse('$_apiBaseUrl/api/hosts/properties/$propertyId/'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return PropertyDetails.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load property details: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<void> updateProperty(String propertyId, Map<String, dynamic> payload) async {
+    final response = await http.put(
+      Uri.parse('$_apiBaseUrl/api/hosts/properties/$propertyId/'),
+      headers: await _getHeaders(),
+      body: json.encode(payload),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update property: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<void> uploadPropertyImage(String propertyId, List<String> imagePaths) async {
+    final uri = Uri.parse('$_apiBaseUrl/api/hosts/files/');
+    var request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(await _getHeaders());
+    request.fields['id'] = propertyId; // Assuming the backend expects property ID in fields
+
+    for (String path in imagePaths) {
+      request.files.add(await http.MultipartFile.fromPath('image', path));
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode != 200) {
+      final responseBody = await response.stream.bytesToString();
+      throw Exception('Failed to upload images: $responseBody');
+    }
+  }
+
+  Future<void> deletePropertyImage(String imageId) async {
+    final response = await http.delete(
+      Uri.parse('$_apiBaseUrl/api/hosts/files/$imageId/'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode != 204) { // 204 No Content is typical for successful DELETE
+      throw Exception('Failed to delete image: ${response.statusCode} ${response.body}');
+    }
   }
 
   // --- Bed API Calls ---

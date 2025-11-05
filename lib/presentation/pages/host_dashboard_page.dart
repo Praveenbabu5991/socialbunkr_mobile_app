@@ -76,6 +76,7 @@ class HostDashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('HostDashboardPage: Received propertyId: $propertyId'); // Debug print
     return Scaffold(
       backgroundColor: lightGrayBackground,
       appBar: HeaderWidget(
