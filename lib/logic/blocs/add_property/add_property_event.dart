@@ -10,8 +10,9 @@ abstract class AddPropertyEvent extends Equatable {
 
 class AddPropertyButtonPressed extends AddPropertyEvent {
   final Map<String, dynamic> propertyData;
+  final XFile? image;
 
-  const AddPropertyButtonPressed({required this.propertyData});
+  const AddPropertyButtonPressed({required this.propertyData, this.image});
 
   @override
   List<Object> get props => [propertyData];

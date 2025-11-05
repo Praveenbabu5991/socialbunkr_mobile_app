@@ -1,11 +1,14 @@
 
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../logic/blocs/add_property/add_property_bloc.dart';
 import '../../data/repositories/property_repository.dart';
-import '../../logic/blocs/my_properties/my_properties_bloc.dart'; // Added
-import '../../logic/blocs/my_properties/my_properties_event.dart'; // Added
-
+import '../../logic/blocs/my_properties/my_properties_bloc.dart';
+import '../../logic/blocs/my_properties/my_properties_event.dart';
 
 class AddPropertyPage extends StatelessWidget {
   const AddPropertyPage({super.key});
@@ -45,6 +48,21 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
   String _propertyType = 'pg';
   String _propertyGenderType = 'unisex';
   bool _foodAvailable = false;
+  XFile? _image;
+  Uint8List? _imageBytes;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _image = pickedFile;
+        _imageBytes = bytes;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +95,6 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
               ),
             );
             Navigator.of(context).pop();
-            // After successfully adding a property, refresh the properties list on the home page
             BlocProvider.of<MyPropertiesBloc>(context).add(FetchMyProperties());
           }
         },
@@ -131,6 +148,30 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                   onChanged: (value) => setState(() => _foodAvailable = value!),
                   activeColor: primaryColor,
                 ),
+                const SizedBox(height: 16),
+                _imageBytes == null
+                    ? OutlinedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.image),
+                        label: const Text('Add Image'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: primaryColor, side: const BorderSide(color: primaryColor),
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Selected Image:', style: TextStyle(fontFamily: fontFamily, fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          kIsWeb ? Image.memory(_imageBytes!, height: 150) : Image.file(File(_image!.path), height: 150),
+                          const SizedBox(height: 8),
+                          TextButton.icon(
+                            onPressed: _pickImage,
+                            icon: const Icon(Icons.edit),
+                            label: const Text('Change Image'),
+                          )
+                        ],
+                      ),
                 const SizedBox(height: 24),
                 BlocBuilder<AddPropertyBloc, AddPropertyState>(
                   builder: (context, state) {
@@ -166,6 +207,7 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
                                   BlocProvider.of<AddPropertyBloc>(context).add(
                                     AddPropertyButtonPressed(
                                       propertyData: propertyData,
+                                      image: _image,
                                     ),
                                   );
                                 }

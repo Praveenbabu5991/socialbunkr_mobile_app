@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -16,10 +17,27 @@ class PropertyApiProvider {
     _httpClient = HttpClient(baseUrl: _apiBaseUrl);
   }
 
-  Future<Map<String, dynamic>> addProperty(Map<String, dynamic> propertyData) async {
-    final response = await _httpClient.post('/api/hosts/properties/', body: jsonEncode(propertyData));
+  Future<Map<String, dynamic>> addProperty(Map<String, dynamic> propertyData, XFile? image) async {
+    final request = http.MultipartRequest('POST', Uri.parse('$_apiBaseUrl/api/hosts/properties/'));
+
+    request.fields['data'] = jsonEncode(propertyData);
+
+    if (image != null) {
+      final imageBytes = await image.readAsBytes();
+      final multipartFile = http.MultipartFile.fromBytes('image', imageBytes, filename: image.name);
+      request.files.add(multipartFile);
+    }
+
+    final token = await _secureStorage.read(key: 'token');
+    if (token != null) {
+      request.headers['Authorization'] = 'Token $token';
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
     if (response.statusCode == 201) {
-      return jsonDecode(response.body);
+      return jsonDecode(responseBody);
     } else {
       throw Exception('Failed to add property');
     }

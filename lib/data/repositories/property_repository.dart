@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:image_picker/image_picker.dart';
 
 import '../providers/property_api_provider.dart';
@@ -6,8 +8,8 @@ import '../providers/property_api_provider.dart';
 class PropertyRepository {
   final PropertyApiProvider _propertyApiProvider = PropertyApiProvider();
 
-  Future<Map<String, dynamic>> addProperty(Map<String, dynamic> propertyData) {
-    return _propertyApiProvider.addProperty(propertyData);
+  Future<Map<String, dynamic>> addProperty(Map<String, dynamic> propertyData, XFile? image) {
+    return _propertyApiProvider.addProperty(propertyData, image);
   }
 
   Future<List<dynamic>> getMyProperties(String organizationId) {
