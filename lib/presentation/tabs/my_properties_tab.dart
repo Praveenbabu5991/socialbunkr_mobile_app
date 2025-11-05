@@ -62,57 +62,65 @@ class MyPropertiesTab extends StatelessWidget {
           BlocBuilder<MyPropertiesBloc, MyPropertiesState>(
             builder: (context, state) {
               if (state is MyPropertiesLoading) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Container(
+                    color: Colors.white,
+                    child: const Center(child: const CircularProgressIndicator()),
+                  ),
                 );
               }
               if (state is MyPropertiesLoaded) {
                 if (state.properties.isEmpty) {
                   return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.home_work_outlined,
-                            size: 80,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "No properties yet!",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Add your first property to get started.",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
+                    hasScrollBody: false,
+                    child: Container(
+                      color: Colors.white,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.home_work_outlined,
+                              size: 80,
                               color: Colors.grey,
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, AppRouter.addProperty);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE9B949),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                            ),
-                            child: Text(
-                              "Add New Property",
+                            const SizedBox(height: 16),
+                            Text(
+                              "No properties yet!",
                               style: GoogleFonts.poppins(
-                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              "Add your first property to get started.",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, AppRouter.addProperty);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE9B949),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                              child: Text(
+                                "Add New Property",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -150,11 +158,19 @@ class MyPropertiesTab extends StatelessWidget {
               }
               if (state is MyPropertiesError) {
                 return SliverFillRemaining(
-                  child: Center(child: Text(state.error)),
+                  hasScrollBody: false,
+                  child: Container(
+                    color: Colors.white,
+                    child: Center(child: Text(state.error)),
+                  ),
                 );
               }
-              return const SliverFillRemaining(
-                child: Center(child: Text("Something went wrong")),
+              return SliverFillRemaining(
+                hasScrollBody: false,
+                child: Container(
+                  color: Colors.white,
+                  child: const Center(child: const Text("Something went wrong")),
+                ),
               );
             },
           ),
