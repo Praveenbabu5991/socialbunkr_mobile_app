@@ -165,7 +165,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
     });
 
     try {
-      final String? apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
+      final String? apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
       final String propertyID = widget.propertyId;
       final _secureStorage = FlutterSecureStorage();
       final token = await _secureStorage.read(key: 'token');

@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import './http_client.dart';
 
 class UserApiProvider {
-  final HttpClient _httpClient = HttpClient(baseUrl: kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080'));
+  final HttpClient _httpClient = HttpClient(baseUrl: kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!);
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await _httpClient.post('/api/users/login/', body: jsonEncode({'email': email, 'password': password}));

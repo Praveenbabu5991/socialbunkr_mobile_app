@@ -55,7 +55,7 @@ class _ExpenseTrackerScreenState extends State<ExpenseTrackerScreen> {
   }
 
   Future<Map<String, dynamic>> _fetchExpenses() async {
-    final apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
+    final apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
     final secureStorage = FlutterSecureStorage();
     final token = await secureStorage.read(key: 'token');
     final monthFormat = DateFormat('yyyy-MM').format(_selectedMonth);
@@ -228,7 +228,7 @@ class __AddExpenseDialogState extends State<_AddExpenseDialog> {
     setState(() { _isSaving = true; });
 
     try {
-      final apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
+      final apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
       final secureStorage = FlutterSecureStorage();
       final token = await secureStorage.read(key: 'token');
 

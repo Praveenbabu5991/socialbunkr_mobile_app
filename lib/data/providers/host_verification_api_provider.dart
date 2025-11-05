@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import './http_client.dart';
 
 class HostVerificationApiProvider {
-  final String _apiBaseUrl = kIsWeb ? 'http://localhost:8080' : (dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080');
+  final String _apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
   late final HttpClient _httpClient;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
