@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:socialbunkr_mobile_app/data/repositories/property_repository.dart';
+import 'package:socialbunkr_mobile_app/logic/blocs/my_properties/my_properties_bloc.dart';
 import 'package:socialbunkr_mobile_app/routes/app_router.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'logic/blocs/authentication/authentication_bloc.dart';
@@ -17,8 +19,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => AuthenticationBloc(userRepository: UserRepository())..add(AppStarted()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => AuthenticationBloc(userRepository: UserRepository())..add(AppStarted()),
+        ),
+        BlocProvider(
+          create: (context) => MyPropertiesBloc(propertyRepository: PropertyRepository(), userRepository: UserRepository()),
+        ),
+      ],
       child: MaterialApp(
         title: "Social Bunkr",
         theme: ThemeData(

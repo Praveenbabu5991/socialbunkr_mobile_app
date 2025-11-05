@@ -95,7 +95,6 @@ class _AddPropertyFormState extends State<AddPropertyForm> {
               ),
             );
             Navigator.of(context).pop();
-            BlocProvider.of<MyPropertiesBloc>(context).add(FetchMyProperties());
           }
         },
         child: SingleChildScrollView(

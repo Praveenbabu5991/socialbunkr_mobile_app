@@ -33,6 +33,12 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _selectedIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    context.read<MyPropertiesBloc>().add(FetchMyProperties());
+  }
+
   static const List<Widget> _widgetOptions = <Widget>[
     HomeTab(),
     MyPropertiesTab(),

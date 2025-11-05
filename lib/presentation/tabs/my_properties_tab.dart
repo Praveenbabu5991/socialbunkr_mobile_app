@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:socialbunkr_mobile_app/presentation/widgets/property_card.dart';
 import 'package:socialbunkr_mobile_app/routes/app_router.dart';
 import '../../logic/blocs/my_properties/my_properties_bloc.dart';
+import '../../logic/blocs/my_properties/my_properties_event.dart';
 
 class MyPropertiesTab extends StatelessWidget {
   const MyPropertiesTab({super.key});
@@ -152,7 +153,9 @@ class MyPropertiesTab extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, AppRouter.addProperty);
+          Navigator.pushNamed(context, AppRouter.addProperty).then((_){
+            context.read<MyPropertiesBloc>().add(FetchMyProperties());
+          });
         },
         backgroundColor: const Color(0xFFE9B949),
         child: const Icon(Icons.add, color: Colors.black),
