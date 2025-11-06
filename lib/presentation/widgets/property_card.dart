@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../logic/blocs/authentication/authentication_bloc.dart';
+import '../../logic/blocs/my_properties/my_properties_bloc.dart';
+import '../../logic/blocs/my_properties/my_properties_event.dart';
 import '../../routes/app_router.dart'; // Added
 
 class PropertyCard extends StatelessWidget {
@@ -74,8 +76,12 @@ class PropertyCard extends StatelessWidget {
                         ),
                         elevation: 3,
                       ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRouter.verifyProperty, arguments: property['id']);
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(context, AppRouter.verifyProperty, arguments: property['id']);
+                        if (result == true) {
+                          // Refresh the properties list
+                          context.read<MyPropertiesBloc>().add(FetchMyProperties());
+                        }
                       },
                       child: Text(
                         'Verify',

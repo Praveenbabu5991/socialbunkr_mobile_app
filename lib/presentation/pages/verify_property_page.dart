@@ -74,9 +74,8 @@ class _VerifyPropertyFormState extends State<VerifyPropertyForm> {
                 backgroundColor: Colors.grey[300],
               ),
             );
-            // Dispatch FetchMyProperties to refresh the list
-            BlocProvider.of<MyPropertiesBloc>(context).add(FetchMyProperties());
-            Navigator.of(context).pop();
+            // Pop with a result to indicate success
+            Navigator.of(context).pop(true);
           }
         },
         child: SingleChildScrollView(
