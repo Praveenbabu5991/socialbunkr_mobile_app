@@ -17,7 +17,7 @@ class HostVerificationApiProvider {
   }
 
   Future<void> verifyHost(String documentType, XFile document, String userId) async {
-    final request = http.MultipartRequest('POST', Uri.parse('$_apiBaseUrl/api/users/host-verifications/'));
+    final request = http.MultipartRequest('POST', Uri.parse('$_apiBaseUrl/api/users/organization-verifications/'));
     request.fields['document_type'] = documentType;
     request.fields['host'] = userId;
     request.files.add(http.MultipartFile.fromBytes(
