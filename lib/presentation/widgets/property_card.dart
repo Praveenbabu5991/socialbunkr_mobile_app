@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../logic/blocs/authentication/authentication_bloc.dart';
 import '../../logic/blocs/my_properties/my_properties_bloc.dart';
 import '../../logic/blocs/my_properties/my_properties_event.dart';
@@ -29,19 +31,56 @@ class PropertyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // TODO: Add property image
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-              ),
-              child: const Center(
-                child: Icon(Icons.image, size: 50, color: Colors.grey),
-              ),
+            // Property image
+            Builder(
+              builder: (context) {
+                final String apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+                String imageUrl = '';
+                if (property['images'] != null && (property['images'] as List).isNotEmpty) {
+                  imageUrl = property['images'][0]['image'];
+                  if (!imageUrl.startsWith('http')) {
+                    imageUrl = '$apiBaseUrl$imageUrl';
+                  }
+                }
+
+                return (imageUrl.isNotEmpty)
+                  ? ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                      ),
+                      child: Image.network(
+                        imageUrl,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Container(
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.image, size: 50, color: Colors.grey),
+                      ),
+                    );
+              }
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),
