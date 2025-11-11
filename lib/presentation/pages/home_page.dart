@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:socialbunkr_mobile_app/screens/subscription/subscription_status_screen.dart';
 import '../../logic/blocs/authentication/authentication_bloc.dart';
 import '../../logic/blocs/my_properties/my_properties_bloc.dart';
 import '../../data/repositories/property_repository.dart';
@@ -452,6 +453,15 @@ class ProfileTab extends StatelessWidget {
                           trailing: const Icon(Icons.arrow_forward_ios),
                           onTap: () {
                             Navigator.pushNamed(context, AppRouter.hostBankDetails);
+                          },
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.subscriptions_outlined),
+                          title: const Text('Subscription'),
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const SubscriptionStatusScreen()));
                           },
                         ),
                         const Divider(height: 1),

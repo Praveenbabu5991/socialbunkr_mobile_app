@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
   DateTime? _joinDate;
 
   late Razorpay _razorpay;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -48,20 +50,68 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
     _rentController.dispose();
     _advanceController.dispose();
     _razorpay.clear();
+    _pollingTimer?.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
+  }
+
+  void _startPollingForStatus() {
+    int attempts = 0;
+    const maxAttempts = 15; // 30 seconds timeout
+    const pollInterval = Duration(seconds: 2);
+
+    _pollingTimer = Timer.periodic(pollInterval, (timer) async {
+      attempts++;
+      debugPrint('[Mobile Polling] Attempt $attempts to check subscription status.');
+
+      try {
+        final apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+        final secureStorage = FlutterSecureStorage();
+        final token = await secureStorage.read(key: 'token');
+        final response = await http.get(
+          Uri.parse('$apiBaseUrl/api/pg_tenant/subscriptions/status/'),
+          headers: {
+            if (token != null) 'Authorization': 'Token $token',
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final statusData = json.decode(response.body);
+          debugPrint('[Mobile Polling] Received status: ${statusData["plan"]}');
+          if (statusData['plan'] == 'ACTIVE') {
+            timer.cancel();
+            debugPrint('[Mobile Polling] Status is ACTIVE. Stopping poll and refreshing UI.');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Subscription activated!'), backgroundColor: Colors.green),
+            );
+            widget.onTenantAssigned(); // Trigger UI refresh
+          }
+        }
+
+        if (attempts >= maxAttempts) {
+          timer.cancel();
+          debugPrint('[Mobile Polling] Max attempts reached. Stopping poll.');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Status update taking longer than expected. Please refresh manually.'), backgroundColor: Colors.orange),
+          );
+        }
+      } catch (e) {
+        debugPrint('[Mobile Polling] Error checking status: $e');
+        if (attempts >= maxAttempts) {
+          timer.cancel();
+        }
+      }
+    });
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Payment successful!',
-          style: TextStyle(color: Colors.black),
-        ),
-        backgroundColor: Colors.grey[300],
+      const SnackBar(
+        content: Text('Payment successful! Activating subscription...'),
+        backgroundColor: Colors.green,
       ),
     );
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(); // Close the upgrade dialog
+    _startPollingForStatus(); // Start polling for the status update
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -91,9 +141,13 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) { // Status is 201 Created
         final subscriptionData = json.decode(response.body);
-        final subscriptionId = subscriptionData['subscription_id'];
+        final subscriptionId = subscriptionData['id']; // Corrected field name
+
+        if (subscriptionId == null) {
+          throw Exception('Subscription ID not found in response');
+        }
 
         var options = {
           'key': dotenv.env['RAZORPAY_KEY_ID'],
@@ -107,7 +161,7 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
         };
         _razorpay.open(options);
       } else {
-        throw Exception('Failed to initiate subscription');
+        throw Exception('Failed to initiate subscription. Status: ${response.statusCode}');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -207,13 +261,10 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
         widget.onTenantAssigned();
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-          content: const Text(
-            'Tenant assigned successfully!',
-            style: TextStyle(color: Colors.black),
+          const SnackBar(
+            content: Text('Tenant assigned successfully!'),
+            backgroundColor: Colors.green,
           ),
-          backgroundColor: Colors.grey[300],
-        ),
         );
       } else if (response.statusCode == 403) {
         _showUpgradeDialog();
