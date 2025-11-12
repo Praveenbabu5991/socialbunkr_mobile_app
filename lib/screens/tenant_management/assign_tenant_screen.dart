@@ -30,6 +30,9 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
   final _advanceController = TextEditingController();
   DateTime? _joinDate;
 
+  String? _userPhone;
+  String? _userEmail;
+
   late Razorpay _razorpay;
   Timer? _pollingTimer;
 
@@ -40,6 +43,7 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    _fetchUserProfile();
   }
 
   @override
@@ -124,6 +128,34 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
     // Do something when an external wallet is selected
   }
 
+  Future<void> _fetchUserProfile() async {
+    try {
+      final apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+      final secureStorage = FlutterSecureStorage();
+      final token = await secureStorage.read(key: 'token');
+
+      final response = await http.get(
+        Uri.parse('$apiBaseUrl/api/users/my-profile/'),
+        headers: {
+          if (token != null) 'Authorization': 'Token $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final userData = json.decode(response.body);
+        setState(() {
+          _userPhone = userData['phone'];
+          _userEmail = userData['email'];
+        });
+        debugPrint('User profile fetched successfully: $_userPhone, $_userEmail');
+      } else {
+        debugPrint('Failed to fetch user profile: ${response.statusCode}. Body: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching user profile: $e');
+    }
+  }
+
   Future<void> _handleUpgrade() async {
     setState(() {
       _upgradeLoading = true;
@@ -141,7 +173,7 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
         },
       );
 
-      if (response.statusCode == 201) { // Status is 201 Created
+      if (response.statusCode == 200 || response.statusCode == 201) { // Accept both 200 OK and 201 Created
         final subscriptionData = json.decode(response.body);
         final subscriptionId = subscriptionData['id']; // Corrected field name
 
@@ -151,12 +183,14 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
 
         var options = {
           'key': dotenv.env['RAZORPAY_KEY_ID'],
+          'amount': 19900, // Amount in paisa (199 INR) - This should ideally come from backend
+          'currency': 'INR', // Currency code
           'subscription_id': subscriptionId,
           'name': 'AffordaNest Pro',
           'description': 'Unlimited access to all features.',
           'prefill': {
-            'contact': '9999999999',
-            'email': 'test@example.com'
+            'contact': _userPhone ?? '9999999999', // Use fetched phone or fallback
+            'email': _userEmail ?? 'test@example.com' // Use fetched email or fallback
           }
         };
         _razorpay.open(options);

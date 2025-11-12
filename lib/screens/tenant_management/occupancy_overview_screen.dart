@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:socialbunkr_mobile_app/screens/tenant_management/widgets/create_room_dialog.dart';
 import 'package:socialbunkr_mobile_app/screens/tenant_management/view_beds_screen.dart';
+import 'package:socialbunkr_mobile_app/screens/tenant_management/widgets/send_message_dialog.dart';
 
 // Models
 class VacancyInsights {
@@ -151,25 +152,52 @@ class _OccupancyOverviewScreenState extends State<OccupancyOverviewScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return CreateRoomDialog(
-                propertyId: widget.propertyId,
-                onRoomCreated: () {
-                  setState(() {
-                    _loadData();
-                  });
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: "sendMessageFab",
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return SendMessageDialog(
+                    propertyId: widget.propertyId,
+                    onMessageSent: () {
+                      // Optionally refresh data or show a snackbar
+                    },
+                  );
                 },
               );
             },
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Create Room'),
-        backgroundColor: const Color(0xFFE9B949), // Yellow color
+            icon: const Icon(Icons.message),
+            label: const Text('Send Message'),
+            backgroundColor: const Color(0xFFE9B949), // Yellow color
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton.extended(
+            heroTag: "createRoomFab",
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return CreateRoomDialog(
+                    propertyId: widget.propertyId,
+                    onRoomCreated: () {
+                      setState(() {
+                        _loadData();
+                      });
+                    },
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Create Room'),
+            backgroundColor: const Color(0xFFE9B949), // Yellow color
+          ),
+        ],
       ),
     );
   }
