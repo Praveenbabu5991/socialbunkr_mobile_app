@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io'; // Import for File
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -7,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:image_picker/image_picker.dart'; // Import for ImagePicker
+import 'package:http_parser/http_parser.dart'; // Import for MediaType
 
 class AssignTenantScreen extends StatefulWidget {
   final String bedId;
@@ -25,10 +28,12 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
 
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _govtIdController = TextEditingController();
   final _rentController = TextEditingController();
   final _advanceController = TextEditingController();
   DateTime? _joinDate;
+  XFile? _identityDocument; // New state variable for the document
+
+  final ImagePicker _picker = ImagePicker();
 
   String? _userPhone;
   String? _userEmail;
@@ -50,7 +55,6 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _govtIdController.dispose();
     _rentController.dispose();
     _advanceController.dispose();
     _razorpay.clear();
@@ -255,6 +259,16 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
     }
   }
 
+  Future<void> _pickIdentityDocument() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _identityDocument = pickedFile; // Store XFile directly
+      });
+    }
+  }
+
   Future<void> _assignTenant() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -275,21 +289,33 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
       final secureStorage = FlutterSecureStorage();
       final token = await secureStorage.read(key: 'token');
 
-      final response = await http.post(
+      var request = http.MultipartRequest(
+        'POST',
         Uri.parse('$apiBaseUrl/api/pg_tenant/longterm/beds/${widget.bedId}/assign-tenant/'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Token $token',
-        },
-        body: json.encode({
-          'name': _nameController.text,
-          'phone': _phoneController.text,
-          'govt_id': _govtIdController.text,
-          'join_date': DateFormat('yyyy-MM-dd').format(_joinDate!),
-          'rent': _rentController.text,
-          'advance_amount': _advanceController.text,
-        }),
       );
+
+      if (token != null) {
+        request.headers['Authorization'] = 'Token $token';
+      }
+
+      request.fields['name'] = _nameController.text;
+      request.fields['phone'] = _phoneController.text;
+      request.fields['join_date'] = DateFormat('yyyy-MM-dd').format(_joinDate!);
+      request.fields['rent'] = _rentController.text;
+      request.fields['advance_amount'] = _advanceController.text;
+
+      if (_identityDocument != null) {
+        final bytes = await _identityDocument!.readAsBytes(); // Read bytes from XFile
+        request.files.add(http.MultipartFile.fromBytes(
+          'identity_document', // Field name on the backend
+          bytes,
+          filename: _identityDocument!.name, // Use XFile's name
+          contentType: MediaType('application', 'octet-stream'), // Generic content type
+        ));
+      }
+
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
 
       if (response.statusCode == 201) {
         widget.onTenantAssigned();
@@ -303,7 +329,7 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
       } else if (response.statusCode == 403) {
         _showUpgradeDialog();
       } else {
-        final errorData = json.decode(response.body);
+        final errorData = json.decode(responseBody); // Decode responseBody
         throw Exception('Failed to assign tenant: ${errorData.toString()}');
       }
     } catch (e) {
@@ -341,12 +367,7 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
               validator: (value) => value!.isEmpty ? 'Please enter a phone number' : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _govtIdController,
-              decoration: const InputDecoration(labelText: 'Government ID'),
-              validator: (value) => value!.isEmpty ? 'Please enter a Government ID' : null,
-            ),
-            const SizedBox(height: 16),
+            
             TextFormField(
               controller: _rentController,
               decoration: const InputDecoration(labelText: 'Monthly Rent'),
@@ -360,6 +381,23 @@ class _AssignTenantScreenState extends State<AssignTenantScreen> {
               keyboardType: TextInputType.number,
               validator: (value) => value!.isEmpty ? 'Please enter the advance amount' : null,
             ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _pickIdentityDocument,
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Upload Identity Document'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50), // Make button full width
+              ),
+            ),
+            if (_identityDocument != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Selected file: ${_identityDocument!.name}',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ),
             const SizedBox(height: 16),
             ListTile(
               title: const Text('Join Date'),
