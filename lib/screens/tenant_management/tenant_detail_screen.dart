@@ -12,7 +12,7 @@ class Tenant {
   final String id;
   final String name;
   final String phone;
-  final String govtId;
+  final String? identityDocumentUrl;
   final DateTime joinDate;
   final double rent;
   final double advanceAmount;
@@ -22,7 +22,7 @@ class Tenant {
     required this.id,
     required this.name,
     required this.phone,
-    required this.govtId,
+    this.identityDocumentUrl,
     required this.joinDate,
     required this.rent,
     required this.advanceAmount,
@@ -34,7 +34,7 @@ class Tenant {
       id: json['id'],
       name: json['name'],
       phone: json['phone'],
-      govtId: json['govt_id'],
+      identityDocumentUrl: json['identity_document_url'],
       joinDate: DateTime.parse(json['join_date']),
       rent: double.tryParse(json['rent'].toString()) ?? 0.0,
       advanceAmount: double.tryParse(json['advance_amount'].toString()) ?? 0.0,
@@ -114,6 +114,10 @@ class _TenantDetailScreenState extends State<TenantDetailScreen> {
               _buildHeader(tenant),
               const SizedBox(height: 24),
               _buildDetailCard(tenant),
+              if (tenant.identityDocumentUrl != null) ...[
+                const SizedBox(height: 24),
+                _buildIdProofCard(tenant.identityDocumentUrl!),
+              ],
             ],
           );
         },
@@ -150,10 +154,29 @@ class _TenantDetailScreenState extends State<TenantDetailScreen> {
         child: Column(
           children: [
             _DetailRow(label: 'Phone Number', value: tenant.phone),
-            _DetailRow(label: 'Government ID', value: tenant.govtId),
             _DetailRow(label: 'Join Date', value: DateFormat.yMMMd().format(tenant.joinDate)),
             _DetailRow(label: 'Monthly Rent', value: '₹${tenant.rent.toStringAsFixed(0)}'),
             _DetailRow(label: 'Advance Paid', value: '₹${tenant.advanceAmount.toStringAsFixed(0)}'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIdProofCard(String imageUrl) {
+    final apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+    final fullImageUrl = imageUrl.startsWith('http') ? imageUrl : '$apiBaseUrl$imageUrl';
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Government ID Proof', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            Image.network(fullImageUrl),
           ],
         ),
       ),

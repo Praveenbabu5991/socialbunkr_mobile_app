@@ -174,27 +174,25 @@ class _ViewBedsScreenState extends State<ViewBedsScreen> {
                               },
                               child: const Text('Assign'),
                             )
-                          : PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'vacate') {
-                                  _vacateBed(bed.id);
-                                } else if (value == 'view_details') {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => TenantDetailScreen(tenantId: bed.tenantId!),
-                                    ),
-                                  );
-                                }
-                              },
-                              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                const PopupMenuItem<String>(
-                                  value: 'view_details',
-                                  child: Text('View Details'),
+                          : Row(
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    _vacateBed(bed.id);
+                                  },
+                                  child: const Text('Vacate'),
                                 ),
-                                const PopupMenuItem<String>(
-                                  value: 'vacate',
-                                  child: Text('Vacate'),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TenantDetailScreen(tenantId: bed.tenantId!),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Tenant Details'),
                                 ),
                               ],
                             ),
