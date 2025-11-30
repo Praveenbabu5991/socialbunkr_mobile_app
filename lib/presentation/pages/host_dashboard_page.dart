@@ -43,6 +43,7 @@ const String fontName = 'Poppins';
 // Booking Model
 class Booking {
   final String id;
+  final String booking_id;
   final String guestName;
   final String checkIn;
   final String checkOut;
@@ -51,6 +52,7 @@ class Booking {
 
   Booking({
     required this.id,
+    required this.booking_id,
     required this.guestName,
     required this.checkIn,
     required this.checkOut,
@@ -59,8 +61,10 @@ class Booking {
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
+    print('Booking.fromJson: status: ${json['status']}');
     return Booking(
       id: json['id'].toString(),
+      booking_id: json['booking_id'].toString(),
       guestName: json['guest_name'] ?? 'N/A',
       checkIn: json['checkin'] ?? 'N/A',
       checkOut: json['checkout'] ?? 'N/A',
@@ -163,9 +167,10 @@ class HostDashboardBody extends StatefulWidget {
 
 class _HostDashboardBodyState extends State<HostDashboardBody> {
   int _mainTabIndex = 0;
-  int _subTabIndex = 0;
+  int _bookingTabIndex = 0;
   List<Booking> _upcomingBookings = [];
   List<Booking> _ongoingBookings = [];
+  List<Booking> _completedBookings = [];
   bool _isLoadingBookings = true;
   String _errorMessage = '';
 
@@ -208,6 +213,9 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
           _ongoingBookings = (data['Ongoing'] as List)
               .map((e) => Booking.fromJson(e))
               .toList();
+          _completedBookings = (data['Completed'] as List)
+              .map((e) => Booking.fromJson(e))
+              .toList();
         });
       } else {
         _errorMessage =
@@ -228,7 +236,43 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
     });
   }
 
-  
+  void _updateBookingStatus(String bookingId) {
+    setState(() {
+      final bookingIndex = _upcomingBookings.indexWhere((b) => b.booking_id == bookingId);
+      if (bookingIndex != -1) {
+        final booking = _upcomingBookings.removeAt(bookingIndex);
+        final updatedBooking = Booking(
+          id: booking.id,
+          booking_id: booking.booking_id,
+          guestName: booking.guestName,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          totalPrice: booking.totalPrice,
+          status: 'Ongoing',
+        );
+        _ongoingBookings.add(updatedBooking);
+      }
+    });
+  }
+
+  void _updateBookingStatusForCheckout(String bookingId) {
+    setState(() {
+      final bookingIndex = _ongoingBookings.indexWhere((b) => b.booking_id == bookingId);
+      if (bookingIndex != -1) {
+        final booking = _ongoingBookings.removeAt(bookingIndex);
+        final updatedBooking = Booking(
+          id: booking.id,
+          booking_id: booking.booking_id,
+          guestName: booking.guestName,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          totalPrice: booking.totalPrice,
+          status: 'Completed',
+        );
+        _completedBookings.add(updatedBooking);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -244,7 +288,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
           Expanded(
             child: DefaultTabController(
               length: 2, // Two tabs: Booking and List Vacant Beds
-              initialIndex: _subTabIndex, // Use the existing state for initial selection
+              initialIndex: _bookingTabIndex, // Use the existing state for initial selection
               child: Container(
                 color: lightGrayBackground, // Explicitly set background color
                 child: Column(
@@ -257,7 +301,7 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
                       indicatorWeight: 3,
                       onTap: (index) {
                         setState(() {
-                          _subTabIndex = index; // Update _subTabIndex when a tab is tapped
+                          _bookingTabIndex = index; // Update _bookingTabIndex when a tab is tapped
                         });
                       },
                       tabs: const [
@@ -278,8 +322,13 @@ class _HostDashboardBodyState extends State<HostDashboardBody> {
                                         style: const TextStyle(color: Colors.red),
                                       ),
                                     )
-                                  : BookingContent(
-                                      bookings: _upcomingBookings + _ongoingBookings),
+                                  : BookingTabView(
+                                      upcomingBookings: _upcomingBookings,
+                                      ongoingBookings: _ongoingBookings,
+                                      completedBookings: _completedBookings,
+                                      onCheckInSuccess: _updateBookingStatus,
+                                      onCheckOutSuccess: _updateBookingStatusForCheckout,
+                                    ),
                           ListVacantBedsContent(propertyId: widget.propertyId),
                         ],
                       ),
@@ -399,10 +448,61 @@ class MainTabToggle extends StatelessWidget {
 
 
 // 4️⃣ BOOKING TAB CONTENT
-class BookingContent extends StatelessWidget {
-  final List<Booking> bookings;
+class BookingTabView extends StatelessWidget {
+  final List<Booking> upcomingBookings;
+  final List<Booking> ongoingBookings;
+  final List<Booking> completedBookings;
+  final Function(String) onCheckInSuccess;
+  final Function(String) onCheckOutSuccess;
 
-  const BookingContent({super.key, required this.bookings});
+  const BookingTabView({
+    super.key,
+    required this.upcomingBookings,
+    required this.ongoingBookings,
+    required this.completedBookings,
+    required this.onCheckInSuccess,
+    required this.onCheckOutSuccess,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [
+              Tab(text: 'Upcoming'),
+              Tab(text: 'Ongoing'),
+              Tab(text: 'Completed'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                BookingList(bookings: upcomingBookings, onCheckInSuccess: onCheckInSuccess, onCheckOutSuccess: onCheckOutSuccess),
+                BookingList(bookings: ongoingBookings, onCheckInSuccess: onCheckInSuccess, onCheckOutSuccess: onCheckOutSuccess),
+                BookingList(bookings: completedBookings, onCheckInSuccess: onCheckInSuccess, onCheckOutSuccess: onCheckOutSuccess),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class BookingList extends StatelessWidget {
+  final List<Booking> bookings;
+  final Function(String) onCheckInSuccess;
+  final Function(String) onCheckOutSuccess;
+
+  const BookingList({
+    super.key,
+    required this.bookings,
+    required this.onCheckInSuccess,
+    required this.onCheckOutSuccess,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -414,34 +514,37 @@ class BookingContent extends StatelessWidget {
         ),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        final booking = bookings[index];
-        return BookingCard(
-          guestName: booking.guestName,
-          checkIn: booking.checkIn,
-          checkOut: booking.checkOut,
-          status: booking.status,
-        );
+    return RefreshIndicator(
+      onRefresh: () async {
+        // This is not ideal, but it will work for now.
+        // A better solution would be to use a state management library.
       },
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: bookings.length,
+        itemBuilder: (context, index) {
+          final booking = bookings[index];
+          return BookingCard(
+            booking: booking,
+            onCheckIn: () => _showCheckInDialog(context, booking, onCheckInSuccess),
+            onCheckOutSuccess: onCheckOutSuccess,
+          );
+        },
+      ),
     );
   }
 }
 
 class BookingCard extends StatelessWidget {
-  final String guestName;
-  final String checkIn;
-  final String checkOut;
-  final String status;
+  final Booking booking;
+  final VoidCallback onCheckIn;
+  final Function(String) onCheckOutSuccess;
 
   const BookingCard({
     super.key,
-    required this.guestName,
-    required this.checkIn,
-    required this.checkOut,
-    required this.status,
+    required this.booking,
+    required this.onCheckIn,
+    required this.onCheckOutSuccess,
   });
 
   @override
@@ -463,7 +566,7 @@ class BookingCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  guestName,
+                  booking.guestName,
                   style: const TextStyle(
                     fontFamily: fontName,
                     fontWeight: FontWeight.bold,
@@ -474,41 +577,60 @@ class BookingCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    _buildDateColumn("Check-in", checkIn),
+                    _buildDateColumn("Check-in", booking.checkIn),
                     Container(
                       height: 30,
                       width: 1,
                       color: dividerGray,
                       margin: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    _buildDateColumn("Check-out", checkOut),
+                    _buildDateColumn("Check-out", booking.checkOut),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () {
-              // Handle CHECK-IN action based on booking status
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: accentGold,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          if (booking.status.toLowerCase() == 'upcoming')
+            ElevatedButton(
+              onPressed: onCheckIn,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: accentGold,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            ),
-            child: const Text(
-              "CHECK-IN",
-              style: TextStyle(
-                fontFamily: fontName,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+              child: const Text(
+                "CHECK-IN",
+                style: TextStyle(
+                  fontFamily: fontName,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            )
+          else if (booking.status.toLowerCase() == 'ongoing')
+            ElevatedButton(
+              onPressed: () => _showCheckOutDialog(context, booking, onCheckOutSuccess),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              ),
+              child: const Text(
+                "CHECK-OUT",
+                style: TextStyle(
+                  fontFamily: fontName,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -540,6 +662,143 @@ class BookingCard extends StatelessWidget {
     );
   }
 }
+
+void _showCheckInDialog(BuildContext context, Booking booking, Function(String) onCheckInSuccess) {
+  final otpController = TextEditingController();
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Enter OTP'),
+        content: TextField(
+          controller: otpController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'OTP',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final otp = otpController.text;
+              if (otp.isNotEmpty) {
+                Navigator.pop(context);
+                _performCheckIn(context, booking.booking_id, otp, onCheckInSuccess);
+              }
+            },
+            child: const Text('Check-in'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _performCheckIn(BuildContext context, String bookingId, String otp, Function(String) onCheckInSuccess) async {
+  try {
+    final String? apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+    final _secureStorage = FlutterSecureStorage();
+    final token = await _secureStorage.read(key: 'token');
+
+    if (apiBaseUrl == null) {
+      throw Exception('API_BASE_URL is not defined in .env');
+    }
+
+    final response = await http.post(
+      Uri.parse('$apiBaseUrl/api/guests/guest-check/check-in/'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Token $token',
+      },
+      body: json.encode({
+        'order_id': bookingId,
+        'otp': otp,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Check-in successful!')),
+      );
+      onCheckInSuccess(bookingId);
+    } else {
+      final error = json.decode(response.body)['error'];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Check-in failed: $error')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('An error occurred: $e')),
+    );
+  }
+}
+
+void _showCheckOutDialog(BuildContext context, Booking booking, Function(String) onCheckOutSuccess) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('Confirm Check-out'),
+        content: const Text('Are you sure you want to check-out this guest?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              _performCheckOut(context, booking.booking_id, onCheckOutSuccess);
+            },
+            child: const Text('Check-out'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _performCheckOut(BuildContext context, String bookingId, Function(String) onCheckOutSuccess) async {
+  try {
+    final String? apiBaseUrl = kIsWeb ? dotenv.env['API_BASE_URL_WEB']! : dotenv.env['API_BASE_URL_ANDROID']!;
+    final _secureStorage = FlutterSecureStorage();
+    final token = await _secureStorage.read(key: 'token');
+
+    if (apiBaseUrl == null) {
+      throw Exception('API_BASE_URL is not defined in .env');
+    }
+
+    final response = await http.post(
+      Uri.parse('$apiBaseUrl/api/guests/bookings/$bookingId/checkout/'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Token $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Check-out successful!')),
+      );
+      onCheckOutSuccess(bookingId);
+    } else {
+      final error = json.decode(response.body)['error'];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Check-out failed: $error')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('An error occurred: $e')),
+    );
+  }
+}
+
 
 // 5️⃣ LIST VACANT BEDS TAB CONTENT
 class ListVacantBedsContent extends StatelessWidget {
